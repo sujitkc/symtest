@@ -1,34 +1,20 @@
 ## FrontEnd
 
+Uses ANTLR4 to parse the input which conforms to the Cymbol grammar.
 
-### Roadmap
-* Define a grammar for the subset of C language that should be supported by the front-end.
-* Use (JLex + Java CUP) / ANTLR to parse the language and create the AST
-* Convert the AST into CFG using Interfaces & Classes defined in SymTest
-* Take Target Edges as input 
+### How to get up and running with the project
+#### The easy way
+* Install Eclipse and set up the [antlr4ide](https://github.com/antlr4ide/antlr4ide) plugin
+* Follow the [tutorial](https://github.com/antlr4ide/antlr4ide) to configure the buildpath and project properties
+* Run the `Driver.java` file with the required file name to get the output
 
+#### The hard way
+* Install ANTLR and set up the classpaths accordingly
+* Compile the g4 file using `-visitor -no-listener` flags
+* Compile and run the `Driver.java` file with required file name to get the output
 
-### Doubts
-* Possible ways to take target edge set (Edges in the graph or line-numbers in the code?)
-
-
-### Running the frontend
-* Install [ANTLRv4](http://www.antlr.org/) and set up the environment variables:
-```
-LINUX
-$ cd /usr/local/lib
-$ wget http://www.antlr.org/download/antlr-4.7-complete.jar
-$ export CLASSPATH=".:/usr/local/lib/antlr-4.7-complete.jar:$CLASSPATH"
-$ alias antlr4='java -jar /usr/local/lib/antlr-4.7-complete.jar'
-$ alias grun='java org.antlr.v4.gui.TestRig'
-```
-* Generating the lexer-parser:
-```
-$ antlr4 C.g4
-$ javac C*.java
-$ grun C compilationUnit Timer.c -gui # to display the parse tree
-```
 
 ### Stuff used to make this:
 
  * [ANTLR v4.7](http://www.antlr.org/)
+ * [antlr4ide](https://github.com/antlr4ide/antlr4ide)
