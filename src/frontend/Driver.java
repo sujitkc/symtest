@@ -15,7 +15,7 @@ public class Driver {
                 CymbolParser parser = new CymbolParser(tokens); 
                 ParseTree tree = parser.file(); 
                 //System.out.println(tree.toStringTree(parser)); // print tree as text <label id="code.tour.main.7"/>
-                CFGVisitor cfg = new CFGVisitor();
+                CFGVisitor cfg = new CFGVisitor(inputFile + ".target");
                 cfg.visit(tree);
         }
 }

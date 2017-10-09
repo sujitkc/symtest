@@ -24,8 +24,9 @@ $ alias grun='java org.antlr.v4.gui.TestRig'
 ```
 * Generating the lexer-parser:
 ```
-$ antlr4 Cymbol.g4 -visitor -no-listener
-$ javac *.java
+$ antlr4 C.g4
+$ javac C*.java
+$ grun C compilationUnit Timer.c -gui # to display the parse tree
 ```
 
 ### Stuff used to make this:

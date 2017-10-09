@@ -1,5 +1,9 @@
 import java.util.Stack;
 import java.util.UUID;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.io.*;
 
 import cfg.ICFEdge;
 import cfg.ICFG;
@@ -27,6 +31,7 @@ class CFGCreator {
         private ICFGBasicBlockNode mCurrBB, mPrevBB;
         private ICFGDecisionNode mCurrDN;
         private ICFGBasicBlockNode mWhileNode, mStartNode;
+        private Set<ICFEdge> targets = new HashSet<ICFEdge>();
 
         public CFGCreator() {
                 try {
@@ -100,7 +105,7 @@ class CFGCreator {
 
         }
 
-        public void addConditional(IExpression exp) {
+        public void addConditional(IExpression exp, boolean isTarget) {
 
                 try {
                         mCurrDN = new CFGDecisionNode(generateId(), mCFG, exp);
@@ -120,6 +125,10 @@ class CFGCreator {
                         addEdge(decisionThenEdge);
                         mCurrDN.setThenEdge(decisionThenEdge);
                         System.out.println("DEBUG: Add Decision-Then edge: " + mCurrDN.getId() + "#" + mCurrBB.getId());
+                        if (isTarget) {
+                                targets.add(decisionThenEdge);
+                                System.out.println("DEBUG: Add Decision-Then edge to target set");
+                        }
                 } catch (Exception e) {
                         System.out.println(e);
                 }
@@ -127,7 +136,7 @@ class CFGCreator {
 
 
 
-        public void setElseBlock() {
+        public void setElseBlock(boolean isTarget) {
                 try {
                         addBasicBlockNode(false);
                         System.out.println("DEBUG: Add else node ");
@@ -136,6 +145,10 @@ class CFGCreator {
                         addEdge(decisionElseEdge);
                         mCurrDN.setElseEdge(decisionElseEdge);
                         System.out.println("DEBUG: Add Decision-Else edge: " + mCurrDN.getId() + "#" + mCurrBB.getId());
+                        if (isTarget) {
+                                targets.add(decisionElseEdge);
+                                System.out.println("DEBUG: Add Decision-Else edge to target set");
+                        }
                 } catch (Exception e) {
                         System.out.println(e);
                 }
@@ -184,6 +197,25 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
 
         private ICFG mCFG;
         private CFGCreator mCreator;
+        private HashMap<Integer, String> targetMap;
+
+        public CFGVisitor(String targetFileName) {
+                targetMap = new HashMap<Integer, String>();
+                File targetFile = new File(targetFileName);
+                try {
+                        BufferedReader br = new BufferedReader(new FileReader(targetFile));
+                        String line;
+                        System.out.println("DEBUG: Target Mapping");
+                        while ((line = br.readLine()) != null) {
+                                String[] parts = line.trim().split("-");
+                                targetMap.put(Integer.parseInt(parts[0]), parts[1]);
+                                System.out.println("Line " + parts[0] + " " + parts[1]);
+                        }
+                } catch (Exception e) {
+                        System.out.println(e);
+                }
+                System.out.println();
+        }
 
 
         @Override 
@@ -248,14 +280,26 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
 
         @Override 
         public Value visitIf(CymbolParser.IfContext ctx) { 
-                System.out.println("DEBUG: IF");
+                int lineNo = ctx.getStart().getLine();
+                boolean isTargetIf = false;
+                boolean isTargetElse = false;
+                String targetPath = targetMap.get(lineNo);
+                if (targetPath != null) {
+                        if (targetPath.equals("I")) 
+                                isTargetIf = true;
+                        else 
+                                isTargetElse = true;
+                }
+
+
+                System.out.println("DEBUG: (" + lineNo + ") IF");
 
                 Value vexp = visit(ctx.expr());
-                mCreator.addConditional((IExpression) vexp);
+                mCreator.addConditional((IExpression) vexp, isTargetIf);
                 //mCreator.setThenBlock();
                 visit(ctx.stat(0));
                 if (ctx.stat(1) != null) {
-                        mCreator.setElseBlock();
+                        mCreator.setElseBlock(isTargetElse);
                         visit(ctx.stat(1));
                 }
                 mCreator.resetIfBlock();
