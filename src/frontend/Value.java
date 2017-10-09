@@ -1,24 +1,5 @@
 package frontend;
 
-import cfg.ICFG;
-import cfg.ICFEdge;
-import cfg.ICFG;
-import cfg.ICFGBasicBlockNode;
-import cfg.ICFGDecisionNode;
-
-import mycfg.CFEdge;
-import mycfg.CFG;
-import mycfg.CFGBasicBlockNode;
-import mycfg.CFGDecisionNode;
-
-import statement.Statement;
-
-import expression.AddExpression;
-import expression.ConcreteConstant;
-import expression.EqualsExpression;
-import expression.IIdentifier;
-import expression.Input;
-import expression.Variable;
 import expression.IExpression;
 
 public class Value {
@@ -33,26 +14,6 @@ public class Value {
 
     public Object get() {
             return value;
-    }
-
-    public IExpression asConcreteConstant() {
-            return (IExpression)value;
-    }
-
-    public Boolean asBoolean() {
-        return (Boolean)value;
-    }
-
-    public Double asDouble() {
-        return (Double)value;
-    }
-
-    public String asString() {
-        return String.valueOf(value);
-    }
-
-    public boolean isDouble() {
-        return value instanceof Double;
     }
 
     @Override

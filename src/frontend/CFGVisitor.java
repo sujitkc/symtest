@@ -1,199 +1,27 @@
 package frontend;
 
-import java.util.Stack;
-import java.util.UUID;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.io.*;
+import java.util.List;
+import java.util.Map;
 
-import cfg.ICFEdge;
 import cfg.ICFG;
-import cfg.ICFGBasicBlockNode;
-import cfg.ICFGDecisionNode;
 import expression.AddExpression;
 import expression.ConcreteConstant;
 import expression.EqualsExpression;
 import expression.IExpression;
 import expression.IIdentifier;
+import expression.Input;
 import expression.MulExpression;
 import expression.NotExpression;
 import expression.Variable;
-import expression.Input;
-import mycfg.CFEdge;
-import mycfg.CFG;
-import mycfg.CFGBasicBlockNode;
-import mycfg.CFGDecisionNode;
 import statement.IStatement;
 import statement.Statement;
+import tester.SymTest;
+import tester.TestSequence;
 
-class CFGCreator {
-        private ICFG mCFG;
-        private Stack<ICFGDecisionNode> mConditionalStack;
-        private ICFGBasicBlockNode mCurrBB, mPrevBB;
-        private ICFGDecisionNode mCurrDN;
-        private ICFGBasicBlockNode mWhileNode, mStartNode;
-        private Set<ICFEdge> targets = new HashSet<ICFEdge>();
-
-        public CFGCreator() {
-                try {
-                        mStartNode = new CFGBasicBlockNode("BEGIN", null);
-                        mWhileNode = new CFGBasicBlockNode("WHILE", null);
-                        mCFG = new CFG(mStartNode, mWhileNode);
-                        System.out.println("DEBUG: Create CFG");
-
-                        mConditionalStack = new Stack<ICFGDecisionNode>();
-
-                        mCurrBB = mStartNode;
-                        addBasicBlockNode(true);
-                } catch (Exception e) {
-                        System.out.println(e);
-                }
-        }
-
-
-        public String generateId() {
-                return UUID.randomUUID().toString();
-        }
-
-        private void addEdge(ICFEdge edge) {
-                mCFG.addEdge(edge);
-        }
-
-
-        private void addBasicBlockNode(boolean createLink) {
-                try {
-                        mPrevBB = mCurrBB;
-                        mCurrBB = new CFGBasicBlockNode(generateId(), mCFG);
-                        System.out.println("DEBUG: Created new node " + mCurrBB.getId());
-                        System.out.println("");
-
-                        if (createLink) {
-                                String edgeId = mPrevBB.getId() + "#" + mCurrBB.getId();
-                                ICFEdge blockEdge = new CFEdge(edgeId, mCFG, mPrevBB, mCurrBB);
-                                addEdge(blockEdge);
-                                System.out.println("DEBUG: Add edge from " + mPrevBB.getId() + " to " + mCurrBB.getId() + ": " + edgeId);
-                        }
-
-                } catch (Exception e) {
-                        System.out.println(e);
-                }
-
-        }
-
-        public ICFG getCFG() {
-                return mCFG;
-        }
-
-        public void addStatement(IStatement stmnt) {
-                mCurrBB.addStatement(stmnt);
-                System.out.println("DEBUG: Add statement to node " + mCurrBB.getId());
-                System.out.println("");
-        }
-
-        public void addWhile() {
-                try {
-                        System.out.println("DEBUG: Create while node");
-                        System.out.println("");
-
-                        addBasicBlockNode(true);
-
-                        ICFEdge whileEdge = new CFEdge("WHILE#" + mCurrBB.getId(), mCFG, mWhileNode, mCurrBB);
-                        addEdge(whileEdge);
-                        System.out.println("DEBUG: Add While edge: " + "WHILE#" + mCurrBB.getId());
-                } catch (Exception e) {
-                        System.out.println(e);
-                }
-
-        }
-
-        public void addConditional(IExpression exp, boolean isTarget) {
-
-                try {
-                        mCurrDN = new CFGDecisionNode(generateId(), mCFG, exp);
-                        mConditionalStack.push(mCurrDN);
-                        System.out.println("DEBUG: Create Decision node " + mCurrDN.getId());
-                        System.out.println("");
-
-                        String edgeId = mCurrBB.getId() + "#" + mCurrDN.getId();
-                        ICFEdge blockEdge = new CFEdge(edgeId, mCFG, mCurrBB, mCurrDN);
-                        addEdge(blockEdge);
-                        System.out.println("DEBUG: Add edge from BB " + mPrevBB.getId() + " to decision node " + mCurrBB.getId() + ": " + edgeId);
-
-                        addBasicBlockNode(false);
-                        System.out.println("DEBUG: Add then block node");
-
-                        ICFEdge decisionThenEdge = new CFEdge(mCurrDN.getId() + "#" + mCurrBB.getId(), mCFG, mCurrDN, mCurrBB);
-                        addEdge(decisionThenEdge);
-                        mCurrDN.setThenEdge(decisionThenEdge);
-                        System.out.println("DEBUG: Add Decision-Then edge: " + mCurrDN.getId() + "#" + mCurrBB.getId());
-                        if (isTarget) {
-                                targets.add(decisionThenEdge);
-                                System.out.println("DEBUG: Add Decision-Then edge to target set");
-                        }
-                } catch (Exception e) {
-                        System.out.println(e);
-                }
-        }
-
-
-
-        public void setElseBlock(boolean isTarget) {
-                try {
-                        addBasicBlockNode(false);
-                        System.out.println("DEBUG: Add else node ");
-
-                        ICFEdge decisionElseEdge = new CFEdge(mCurrDN.getId() + "#" + mCurrBB.getId(), mCFG, mCurrDN, mCurrBB);
-                        addEdge(decisionElseEdge);
-                        mCurrDN.setElseEdge(decisionElseEdge);
-                        System.out.println("DEBUG: Add Decision-Else edge: " + mCurrDN.getId() + "#" + mCurrBB.getId());
-                        if (isTarget) {
-                                targets.add(decisionElseEdge);
-                                System.out.println("DEBUG: Add Decision-Else edge to target set");
-                        }
-                } catch (Exception e) {
-                        System.out.println(e);
-                }
-        }
-
-        public void resetIfBlock() {
-                try {
-                        addBasicBlockNode(false);
-
-                        ICFGBasicBlockNode thenNode = (ICFGBasicBlockNode)mCurrDN.getThenSuccessorNode();
-                        ICFEdge thenEndEdge = new CFEdge(thenNode.getId() + "#" + mCurrBB.getId(), mCFG, thenNode, mCurrBB);
-                        addEdge(thenEndEdge);
-                        System.out.println("DEBUG: Add Then-EndIf edge: " + thenNode.getId() + "#" + mCurrBB.getId());
-
-                        if (mCurrDN.getElseEdge() != null) {
-                                ICFGBasicBlockNode elseNode = (ICFGBasicBlockNode)mCurrDN.getElseSuccessorNode();
-                                ICFEdge elseEndEdge = new CFEdge(elseNode.getId() + "#" + mCurrBB.getId(), mCFG, elseNode, mCurrBB);
-                                addEdge(elseEndEdge);
-                                System.out.println("DEBUG: Add Else-EndIf edge: " + elseNode.getId() + "#" + mCurrBB.getId());
-                        }
-                } catch (Exception e) {
-                        System.out.println(e);
-                }
-
-                mConditionalStack.pop();
-                if (!mConditionalStack.empty()) {
-                        mCurrDN = mConditionalStack.peek();
-                }
-
-                System.out.println("DEGUB: End of if");
-                System.out.println("");
-        }
-
-        public void linkLastNode() {
-                try {
-                        ICFEdge decisionElseEdge = new CFEdge("WHILE#" + mCurrBB.getId(), mCFG, mWhileNode, mCurrBB);
-                        addEdge(decisionElseEdge);
-                        System.out.println("DEBUG: Add Last BB to While edge: " + "WHILE#" + mCurrBB.getId());
-                } catch (Exception e) {
-                        System.out.println(e);
-                }
-        }
-}
 
 public class CFGVisitor extends CymbolBaseVisitor<Value> {
 
@@ -226,6 +54,14 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                 mCFG = mCreator.getCFG();
                 visitChildren(ctx); 
                 mCreator.linkLastNode();
+
+                /*
+				SymTest st = new SymTest(mCFG, mCreator.targets);
+				TestSequence seq = st.generateTestSequence();
+				System.out.println(seq);
+				Map<IIdentifier, List<Object>> testseq = seq.getTestSequence();
+				System.out.println(testseq);
+				*/
 
                 return null;
         }

@@ -39,7 +39,7 @@ public class YicesSolver implements ISolver {
 		PrintWriter out = new PrintWriter(outFile);
 		out.println(yicesInput);
 		out.close();
-		String command = "/home/sujit/My-Downloads/yices-2.2.2/bin/yices resources/input.ys";
+		String command = "/usr/local/bin/yices resources/input.ys";
 		String output = YicesSolver.cmdExec(command);
 		// System.out.println("yices output :\n" + output);
 
