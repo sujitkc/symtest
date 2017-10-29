@@ -49,6 +49,8 @@ public class SETExpressionVisitor implements IExprVisitor<IExpression> {
 			this.visit((False)exp);
 		}
 		else if(exp instanceof GreaterThanExpression) {
+			GreaterThanExpression gt = (GreaterThanExpression) exp;
+//			System.out.println("SEE IF DEBUG gt: " + gt.getLHS() + " " + gt.getRHS());
 			this.visit((GreaterThanExpression)exp);
 		}
 		else if(exp instanceof True) {
@@ -162,6 +164,7 @@ public class SETExpressionVisitor implements IExprVisitor<IExpression> {
 		exp.accept(this);
 		IExpression lhs = this.mStack.pop();
 		IExpression rhs = this.mStack.pop();
+//		System.out.println("SETEXP DEBUG: lhs-" + lhs + " rhs-" + rhs);
 		this.mStack.push(new GreaterThanExpression(this.mNode.getSET(), lhs, rhs));
 	}
 
@@ -230,6 +233,7 @@ public class SETExpressionVisitor implements IExprVisitor<IExpression> {
 
 	@Override
 	public void visit(Variable exp) {
+//		System.out.println("VISITING VAR: " + exp + " " + this.mNode.getClass());
 		this.mStack.push(this.mNode.getLatestValue(exp));
 	}
 	

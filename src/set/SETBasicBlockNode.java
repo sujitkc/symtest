@@ -22,6 +22,11 @@ public class SETBasicBlockNode extends SETNode {
 		super(set, cfgNode);
 		this.mId = SETBasicBlockNode.generateId();
 	}
+	
+	//EXTRA
+	public String toString() {
+		return this.getCFGNode().toString();
+	}
 
 /*	public SETBasicBlockNode(String id, SET set, ICFGBasicBlockNode cfgNode) throws Exception {
 		super(set, cfgNode);
@@ -71,13 +76,21 @@ public class SETBasicBlockNode extends SETNode {
 */
 	@Override
 	public IExpression getLatestValue(IIdentifier var) {
-		if(this.mValues.keySet().contains(var)) {
-			return this.mValues.get(var);
+		System.out.println("####GetLV var:" + var.hashCode() + " incoming edge: " + this.mValues);
+//		if(this.mValues.keySet().contains(var)) {
+//			return this.mValues.get(var);
+//		}
+		for (IIdentifier key : this.mValues.keySet()) {
+			System.out.println("@@@@" + key.getName() + " == " + var.getName());
+			if (key.getName().equals(var.getName()))
+				return this.mValues.get(key);
 		}
 		if(this.mIncomingEdge == null) {
+//		System.out.println("SETBN null" + var);
 			return null;
 		}
 		if(this.mIncomingEdge.getTail() == null) {
+//		System.out.println("SETBN null2" + var);
 			return null;
 		}
 		return this.mIncomingEdge.getTail().getLatestValue(var);
@@ -89,6 +102,7 @@ public class SETBasicBlockNode extends SETNode {
 	}
 	
 	public void setValue(IIdentifier var, IExpression val) {
+		System.out.println("SETVALUE " + var.hashCode()+ " " + val);
 		this.mValues.put(var, val);
 	}
 

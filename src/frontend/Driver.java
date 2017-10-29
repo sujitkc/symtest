@@ -12,7 +12,8 @@ public class Driver {
                 if ( args.length>0 ) inputFile = args[0];
                 */
                 InputStream is = System.in;
-                inputFile = "/Users/athul/src/SKC/symtest/src/frontend/Timer.cymbol";
+                //inputFile = "/Users/athul/src/SKC/symtest/src/frontend/Timer.cymbol";
+                inputFile = "/Users/athul/src/SKC/symtest/src/frontend/SimpleInput.cymbol";
                 if ( inputFile!=null ) is = new FileInputStream(inputFile);
                 ANTLRInputStream input = new ANTLRInputStream(is);
                 CymbolLexer lexer = new CymbolLexer(input); 

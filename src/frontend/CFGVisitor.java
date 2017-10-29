@@ -11,9 +11,13 @@ import cfg.ICFG;
 import expression.AddExpression;
 import expression.ConcreteConstant;
 import expression.EqualsExpression;
+import expression.GreaterThanEqualToExpression;
+import expression.GreaterThanExpression;
 import expression.IExpression;
 import expression.IIdentifier;
 import expression.Input;
+import expression.LesserThanEqualToExpression;
+import expression.LesserThanExpression;
 import expression.MulExpression;
 import expression.NotExpression;
 import expression.Variable;
@@ -54,14 +58,13 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                 mCFG = mCreator.getCFG();
                 visitChildren(ctx); 
                 mCreator.linkLastNode();
+                mCreator.debugCFG();
 
-                /*
 				SymTest st = new SymTest(mCFG, mCreator.targets);
 				TestSequence seq = st.generateTestSequence();
 				System.out.println(seq);
 				Map<IIdentifier, List<Object>> testseq = seq.getTestSequence();
 				System.out.println(testseq);
-				*/
 
                 return null;
         }
@@ -123,17 +126,22 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                 boolean isTargetElse = false;
                 String targetPath = targetMap.get(lineNo);
                 if (targetPath != null) {
-                        if (targetPath.equals("I")) 
+                        if (targetPath.equals("I")) {
                                 isTargetIf = true;
-                        else 
+                        } else if (targetPath.equals("B")) {
+                        			isTargetIf = isTargetElse = true;
+                        } else {
                                 isTargetElse = true;
+                        }
                 }
-
 
                 System.out.println("DEBUG: (" + lineNo + ") IF");
 
+                //System.out.println("DEBUG: IF COND text: " + ctx.expr().getText());
+                //System.out.println("DEBUG: 0 " + ctx.expr().getChildCount());
+                //System.out.println("DEBUG: 1 " + ctx.expr().getChild(0).getText());
                 Value vexp = visit(ctx.expr());
-                mCreator.addConditional((IExpression) vexp, isTargetIf);
+                mCreator.addConditional((IExpression) vexp.get(), isTargetIf);
                 //mCreator.setThenBlock();
                 visit(ctx.stat(0));
                 if (ctx.stat(1) != null) {
@@ -199,6 +207,66 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                 return val;
         }
 
+        @Override 
+        public Value visitGreaterThan(CymbolParser.GreaterThanContext ctx) { 
+                System.out.println("DEBUG: GREATER THAN EXP: " + ctx.expr(0).getText() + " GREATER THAN " + ctx.expr(1).getText());
+                Value vleft = visit(ctx.expr(0));
+                Value vright = visit(ctx.expr(1));
+                Value val = null;
+                try {
+                        GreaterThanExpression grt = new GreaterThanExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
+						//System.out.println("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
+                        val = new Value(grt);
+                } catch (Exception e) {
+                        System.out.println("Exception GREATER THAN: " + e);
+                }
+                return val;
+        }
+
+        @Override 
+        public Value visitGreaterThanEqual(CymbolParser.GreaterThanEqualContext ctx) { 
+                System.out.println("DEBUG: GREATER THAN EQUAL EXP: " + ctx.expr(0).getText() + " GREATER THAN EQUALS " + ctx.expr(1).getText());
+                Value vleft = visit(ctx.expr(0));
+                Value vright = visit(ctx.expr(1));
+                Value val = null;
+                try {
+                        GreaterThanEqualToExpression grtEq = new GreaterThanEqualToExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
+                        val = new Value(grtEq);
+                } catch (Exception e) {
+                        System.out.println("GREATER THAN EQ: " + e);
+                }
+                return val;
+        }
+
+        @Override 
+        public Value visitLessThan(CymbolParser.LessThanContext ctx) { 
+                System.out.println("DEBUG: LESSER THAN EXP: " + ctx.expr(0).getText() + " LESSER THAN " + ctx.expr(1).getText());
+                Value vleft = visit(ctx.expr(0));
+                Value vright = visit(ctx.expr(1));
+                Value val = null;
+                try {
+                        LesserThanExpression lrt = new LesserThanExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
+                        val = new Value(lrt);
+                } catch (Exception e) {
+                        System.out.println("LESSER THAN: " + e);
+                }
+                return val;
+        }
+
+        @Override 
+        public Value visitLessThanEqual(CymbolParser.LessThanEqualContext ctx) { 
+                System.out.println("DEBUG: LESSER THAN EQUAL EXP: " + ctx.expr(0).getText() + " LESSER THAN EQUALS " + ctx.expr(1).getText());
+                Value vleft = visit(ctx.expr(0));
+                Value vright = visit(ctx.expr(1));
+                Value val = null;
+                try {
+                        LesserThanEqualToExpression lrtEq = new LesserThanEqualToExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
+                        val = new Value(lrtEq);
+                } catch (Exception e) {
+                        System.out.println("LESSER THAN EQ: " + e);
+                }
+                return val;
+        }
         @Override 
         public Value visitMult(CymbolParser.MultContext ctx) { 
                 System.out.println("DEBUG: MULT");

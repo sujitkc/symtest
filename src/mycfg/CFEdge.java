@@ -35,7 +35,8 @@ public class CFEdge implements ICFEdge {
 			throw e;			
 		}
 		if(cfg != null) {
-			cfg.addEdge(this);
+			//DUPLICATE ADD EDGE FOUND!!! FINALLY!
+			//cfg.addEdge(this);
 		}
 		IdGenerator.addId(id);
 		this.mId = id;

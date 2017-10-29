@@ -9,6 +9,11 @@ public class SETEdge {
 	SETNode mHead; // destination
 	private String mId;
 	
+	//EXTRA
+	public String toString() {
+		return mTail + " " + mHead;
+	}
+	
 	public SETEdge(SET set, SETNode tail, SETNode head) {
 		this.mSET = set;
 		this.mTail = tail;

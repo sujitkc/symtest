@@ -3,14 +3,13 @@ package mycfg;
 import java.util.HashSet;
 import java.util.Set;
 
-import utilities.IdGenerator;
 import cfg.ICFEdge;
 import cfg.ICFG;
 import cfg.ICFGBasicBlockNode;
 import cfg.ICFGDecisionNode;
 import cfg.ICFGNode;
 import expression.IIdentifier;
-import expression.Variable;
+import utilities.IdGenerator;
 
 public class CFG implements ICFG {
 
@@ -24,6 +23,7 @@ public class CFG implements ICFG {
 	private Set<ICFEdge> mEdges = new HashSet<ICFEdge>();
 
 	private String mId;
+	
 	
 	public CFG(ICFGBasicBlockNode start, ICFGBasicBlockNode stop) throws Exception {
 		this.mStartNode = start;

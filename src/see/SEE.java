@@ -17,6 +17,7 @@ import cfg.ICFEdge;
 import cfg.ICFG;
 import cfg.ICFGBasicBlockNode;
 import cfg.ICFGNode;
+import expression.GreaterThanExpression;
 import expression.IExpression;
 import expression.IIdentifier;
 import expression.Type;
@@ -45,7 +46,9 @@ public class SEE {
 	 * @throws Exception
 	 */
 	public void expandSET(List<ICFEdge> cfgEdges) throws Exception {
+//		System.out.println("SYMTEST DEBUG cfgEdges: " + cfgEdges);
 		for (ICFEdge edge : cfgEdges) {
+//			System.out.println("SYMTEST DEBUG singlestep edge: " + edge);
 			singlestep(edge);
 		}
 	}
@@ -68,14 +71,17 @@ public class SEE {
 		this.mSET.updateLeafNodeSet();
 		Set<SETNode> newLeafNodes = new HashSet<SETNode>();
 		newLeafNodes = this.mSET.getLeafNodes();
+//		System.out.println("SYMTEST DEBUG newLeafNodes: " + newLeafNodes);
 		// check for null edge
 		if (edge == null) {
 			throw new Exception("Null Edge");
 		}
 		for (SETNode leaf : newLeafNodes) {
+//			System.out.println("SYMTEST DEBUG leaf: " + leaf);
 			ICFGNode corrCFGNode = leaf.getCFGNode();
 			List<ICFEdge> outCFEdges = corrCFGNode.getOutgoingEdgeList();
 			if (outCFEdges.contains(edge)) {
+//				System.out.println("SYMTEST DEBUG valid");
 				valid = true;
 				ICFGNode newNode = edge.getHead();
 				// check for dangling edge
@@ -88,10 +94,12 @@ public class SEE {
 					((SETBasicBlockNode) leaf).setOutgoingEdge(newSETEdge);
 					// case 1
 					if (newNode instanceof CFGBasicBlockNode) {
+//						System.out.println("SYMTEST DEBUG addNewSETBB 1");
 						addNewSETBasicBlockNode(newNode, newSETEdge);
 					}
 					// case 2
 					else if (newNode instanceof CFGDecisionNode) {
+//						System.out.println("SYMTEST DEBUG addNewSETDec 2");
 						addNewSETDecisionNode(newNode, newSETEdge);
 					}
 				}
@@ -106,6 +114,7 @@ public class SEE {
 						}
 						// case 4a
 						else if (newNode instanceof CFGDecisionNode) {
+//							System.out.println("SYMTEST DEBUG addNewSETDec 4a");
 							addNewSETDecisionNode(newNode, newSETEdge);
 							((SETDecisionNode) leaf).setThenEdge(newSETEdge);
 						}
@@ -117,6 +126,7 @@ public class SEE {
 						}
 						// case 4b
 						else if (newNode instanceof CFGDecisionNode) {
+//							System.out.println("SYMTEST DEBUG addNewSETDec 4b");
 							addNewSETDecisionNode(newNode, newSETEdge);
 							((SETDecisionNode) leaf).setElseEdge(newSETEdge);
 						}
@@ -129,13 +139,15 @@ public class SEE {
 		}
 		if (!valid) {
 
-			throw new Exception("New Node not connected  to Leaf ");
+			throw new Exception("New Node not connected  to Leaf " + edge);
 		}
 	}
 
 	public void addNewSETDecisionNode(ICFGNode newNode, SETEdge newSETEdge)
 			throws Exception {
+//		System.out.println("SYMTEST DEBUG newNode: " + newNode);
 		CFGDecisionNode decisionNode = (CFGDecisionNode) newNode;
+//		System.out.println("SYMTEST DEBUG decisionNode: " + decisionNode.getCondition());
 		SETDecisionNode newSETNode = new SETDecisionNode(
 				decisionNode.getCondition(), mSET, decisionNode);
 		this.mSET.addDecisionNode(newSETNode);
@@ -158,11 +170,13 @@ public class SEE {
 	}
 
 	private void computeStatementList(SETBasicBlockNode node) throws Exception {
+		System.out.println("#ComputerSTMNTList:" + node);
 		ICFGBasicBlockNode cfgBasicBlockNode = (ICFGBasicBlockNode) node
 				.getCFGNode();
 		List<IStatement> statements = cfgBasicBlockNode.getStatements();
 
 		for (IStatement statement : statements) {
+//			System.out.println("#ComputerSTMNTList: STMNT" + statement);
 			SETExpressionVisitor visitor = new SETExpressionVisitor(node,
 					statement.getLHS().getType());
 			IExpression value = null;
@@ -171,6 +185,7 @@ public class SEE {
 			value = visitor.getValue();
 
 			IIdentifier var = statement.getLHS();
+//			System.out.println("##SETVALUE var: " + var + " value:" + value);
 			node.setValue(var, value);
 		}
 	}
@@ -179,9 +194,12 @@ public class SEE {
 		SETExpressionVisitor visitor = new SETExpressionVisitor(node,
 				Type.BOOLEAN);
 		CFGDecisionNode cfgNode = (CFGDecisionNode) node.getCFGNode();
+//		System.out.println("SYMTEST DEBUG cfgnode: " + cfgNode);
 		if (node.getCondition() == null) {
 			throw new Exception("Null Expression");
 		} else {
+			//GreaterThanExpression gt = (GreaterThanExpression)cfgNode.getCondition();
+//			System.out.println("SEE DEBUG gt: " + gt.getLHS() + " " + gt.getRHS());
 			visitor.visit(cfgNode.getCondition());
 			IExpression value = visitor.getValue();
 			node.setCondition(value);

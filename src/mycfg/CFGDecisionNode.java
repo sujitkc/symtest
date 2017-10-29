@@ -161,6 +161,7 @@ public class CFGDecisionNode extends CFGNode implements ICFGDecisionNode {
 	
 	public String toString() {
 		String s = "CFGDecisionNode " + this.mId + "\n";
+		s += this.mCondition + "!";
 		s = s + "Incoming edges = { ";
 		for(ICFEdge e : this.mIncomingEdgeList) {
 			s = s + e.getId() + " ";

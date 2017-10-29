@@ -25,6 +25,7 @@ public class Variable extends Expression implements IIdentifier {
 		}
 		program.addVariable(this);
 	}
+	
 
 	@Override
 	public String getName() {

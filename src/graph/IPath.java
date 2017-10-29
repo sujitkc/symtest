@@ -16,4 +16,6 @@ public interface IPath {
 	public void concatenate(IEdge path) throws Exception;
 	public boolean hasEdge(IEdge e);
 	public String toString();
+	//EXTRA
+	public void removeDups();
 }

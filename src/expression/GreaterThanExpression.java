@@ -10,8 +10,9 @@ public class GreaterThanExpression extends Expression implements IBinaryExpressi
 	
 	public GreaterThanExpression(IProgram program, IExpression lhs, IExpression rhs) throws Exception {
 		super(program, Type.BOOLEAN);
+		System.out.println("GT DEBUG: " + lhs + " " + rhs);
 		if(lhs.getType() != rhs.getType()) {
-			Exception e = new Exception("GreaterThanExpression : Type error.");
+			Exception e = new Exception("GreaterThanExpression : Type error " + lhs.getType() + " " + rhs.getType());
 			throw e;
 		}
 		this.mLHS = lhs;
@@ -34,8 +35,10 @@ public class GreaterThanExpression extends Expression implements IBinaryExpressi
 	@Override
 	public void accept(IExprVisitor<?> visitor) {
 		try {
+			System.out.println("GT DEBUG BEFORE VISIT " + mLHS + " " + mRHS);
 			visitor.visit(this.mRHS);
 			visitor.visit(this.mLHS);
+			System.out.println("GT DEBUG after VISIT " + mLHS + " " + mRHS);
 		} catch (Exception e) {
 				e.printStackTrace();
 		}

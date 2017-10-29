@@ -168,6 +168,11 @@ public class FindCFPathAlgorithm {
 			
 			currentTargets = updateTargets(newAcyclicPath, currentTargets);
 			path.concatenate(newAcyclicPath);
+
+			//EXTRA
+			System.out.println("SYMTEST DEBUG removing dups");
+			path.removeDups();
+
 			System.out.println("path = " + path);
 			List<IEdge> loopEdgeList = this.mTargetNode.getOutgoingEdgeList();
 			if(!loopEdgeList.isEmpty()) {

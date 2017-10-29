@@ -93,4 +93,21 @@ public class Path implements IPath {
 		s = s + ">";
 		return s;
 	}
+	
+	//EXTRA
+	@Override
+	public void removeDups() {
+		String s, prev = null;
+		ArrayList<Integer> dupIndex = new ArrayList<Integer>();
+		for(int i = 0; i < this.getSize(); i++) {
+			s = this.mPath.get(i).getId();
+			if (s == prev) {
+				dupIndex.add(i);
+			}
+			prev = s;
+		}
+		for (int i = 0; i < dupIndex.size(); ++i) {
+			mPath.remove((int)dupIndex.get(i));
+		}
+	}
 }

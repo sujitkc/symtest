@@ -28,7 +28,7 @@ block:  '{' stat* '}'
 stat    :   block                           #StatBlock
         |   varDecl                         #Decl
         |   'while' expr stat               #While
-        |   'if' expr stat ('else' stat)?   #If
+        |   'if' '('expr')' stat ('else' stat)?   #If
         |   'return' expr? ';'              #Return
         |   expr '=' expr  ';'              #Assign
         |   expr ';'                        #Exp
@@ -43,6 +43,10 @@ expr    :   ID '(' exprList? ')'            #Call
         |   expr ('+' | '-') expr           #AddSub
         |   expr '==' expr                  #Equal
         |   expr '!=' expr                  #NotEqual
+        |   expr '>' expr                   #GreaterThan
+        |   expr '>=' expr                  #GreaterThanEqual
+        |   expr '<' expr                   #LessThan
+        |   expr '<=' expr                  #LessThanEqual
         |   ID                              #Var
         |   (MINUS)? INT                    #Int
         |   '(' expr ')'                    #Parens
@@ -60,4 +64,3 @@ WS      :   [ \t\n\r]+ -> skip ;
 SL_COMMENT
     :   '//' .*? '\n' -> skip
     ;
-            

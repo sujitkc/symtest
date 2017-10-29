@@ -120,63 +120,84 @@ public class TestSymTest {
 		System.out.println("Test Case 3 Start\n\n");
 		ICFG mCFG = null;
 		ICFGBasicBlockNode mCFGStart, mCFGEnd;
-		mCFGStart = new CFGBasicBlockNode("S3", mCFG);
-		mCFGEnd = new CFGBasicBlockNode("T3", mCFG);
+		mCFGStart = new CFGBasicBlockNode("BEGIN", mCFG);
+		mCFGEnd = new CFGBasicBlockNode("WHILE", mCFG);
 		mCFG = new CFG(mCFGStart, mCFGEnd);
+		
+		ICFGBasicBlockNode b1 = new CFGBasicBlockNode("1", mCFG);
+		mCFG.addBasicBlockNode(b1);
+		CFEdge eB1 = new CFEdge("B-1", mCFG, mCFGStart, b1);
+		mCFG.addEdge(eB1);
+
 		Variable v1 = null;
 		v1 = new Variable("v1", mCFG);
-
 		Input i1;
-
 		i1 = new Input(mCFG);
 
-		ICFGBasicBlockNode D = new CFGBasicBlockNode("D", mCFG);
-		mCFG.addBasicBlockNode(D);
-		CFEdge e6 = new CFEdge("SD", mCFG, mCFGStart, D);
-		mCFG.addEdge(e6);
+		ICFGBasicBlockNode b2 = new CFGBasicBlockNode("2", mCFG);
+		mCFG.addBasicBlockNode(b2);
+		CFEdge e12 = new CFEdge("1-2", mCFG, b1, b2);
+		mCFG.addEdge(e12);
 		Statement s1 = new Statement(mCFG, v1, i1);
-		D.addStatement(s1);
+		b2.addStatement(s1);
 
 		ConcreteConstant exp1 = new ConcreteConstant(15, mCFG);
 		GreaterThanExpression exp2 = new GreaterThanExpression(mCFG, v1, exp1);
-		ICFGDecisionNode A = new CFGDecisionNode("A", mCFG, exp2);
-		mCFG.addDecisionNode(A);
-		ICFEdge e1 = new CFEdge("DA", mCFG, D, A);
-		mCFG.addEdge(e1);
+		ICFGDecisionNode b3 = new CFGDecisionNode("3", mCFG, exp2);
+		mCFG.addDecisionNode(b3);
+		ICFEdge e23 = new CFEdge("2-3", mCFG, b2, b3);
+		mCFG.addEdge(e23);
 
-		ICFGBasicBlockNode B = new CFGBasicBlockNode("B", mCFG);
+		ICFGBasicBlockNode b4 = new CFGBasicBlockNode("4", mCFG);
 		IExpression exp3 = new AddExpression(mCFG,
 				new ConcreteConstant(10, mCFG), new ConcreteConstant(20, mCFG));
-		B.addStatement(new Statement(mCFG, v1, exp3));
-		mCFG.addBasicBlockNode(B);
+		b4.addStatement(new Statement(mCFG, v1, exp3));
+		mCFG.addBasicBlockNode(b4);
+		ICFEdge e34 = new CFEdge("3-4", mCFG, b3, b4);
+		mCFG.addEdge(e34);
 
-		ICFGBasicBlockNode C = new CFGBasicBlockNode("C", mCFG);
+		ICFGBasicBlockNode b5 = new CFGBasicBlockNode("5", mCFG);
 		IExpression exp4 = new AddExpression(mCFG,
 				new ConcreteConstant(1, mCFG), new ConcreteConstant(2, mCFG));
-		C.addStatement(new Statement(mCFG, v1, exp4));
-		mCFG.addBasicBlockNode(C);
+		b5.addStatement(new Statement(mCFG, v1, exp4));
+		mCFG.addBasicBlockNode(b5);
+		ICFEdge e35 = new CFEdge("3-5", mCFG, b3, b5);
+		mCFG.addEdge(e35);
 
-		ICFEdge e2 = new CFEdge("AB", mCFG, A, B);
-		mCFG.addEdge(e2);
-		ICFEdge e3 = new CFEdge("AC", mCFG, A, C);
-		mCFG.addEdge(e3);
-		A.setThenEdge(e2);
-		A.setElseEdge(e3);
-		ICFEdge e4 = new CFEdge("BT", mCFG, B, mCFGEnd);
-		mCFG.addEdge(e4);
-		ICFEdge e5 = new CFEdge("CT", mCFG, C, mCFGEnd);
-		mCFG.addEdge(e5);
-		ICFEdge e7 = new CFEdge("TS", mCFG, mCFGEnd, mCFGStart);
-		mCFG.addEdge(e7);
+		b3.setThenEdge(e34);
+		b3.setElseEdge(e35);
+
+		ICFGBasicBlockNode b6 = new CFGBasicBlockNode("6", mCFG);
+		mCFG.addBasicBlockNode(b6);
+		CFEdge e46 = new CFEdge("4-6", mCFG, b4, b6);
+		mCFG.addEdge(e46);
+		CFEdge e56 = new CFEdge("5-6", mCFG, b5, b6);
+		mCFG.addEdge(e56);
+
+		ICFEdge e6W = new CFEdge("6-WHILE", mCFG, b6, mCFGEnd);
+		mCFG.addEdge(e6W);
+		ICFEdge eW2 = new CFEdge("WHILE-2", mCFG, mCFGEnd, b2);
+		mCFG.addEdge(eW2);
+
+		/*
+		//alternate
+		CFEdge e46 = new CFEdge("4-WHILE", mCFG, b4, mCFGEnd);
+		mCFG.addEdge(e46);
+		CFEdge e56 = new CFEdge("5-WHILE", mCFG, b5, mCFGEnd);
+		mCFG.addEdge(e56);
+		ICFEdge eW2 = new CFEdge("WHILE-2", mCFG, mCFGEnd, b2);
+		mCFG.addEdge(eW2);
+		*/
 
 		Set<ICFEdge> targets = new HashSet<ICFEdge>();
 		// Adding the 'then' edge
-		targets.add(e2);
+		targets.add(e34);
 		// Adding the 'else' edge
-		targets.add(e3);
+		targets.add(e35);
 		SymTest tester = new SymTest(mCFG, targets);
 		TestSequence seq = tester.generateTestSequence();
 		Map<IIdentifier, List<Object>> testseq = seq.getTestSequence();
+			System.out.println("null test sequence!");
 
 		if(testseq == null) {
 			System.out.println("null test sequence!");
@@ -192,6 +213,7 @@ public class TestSymTest {
 			int k = ((Integer) v).intValue();
 			Assert.assertTrue((k > 15) || (k <= 15));
 		}
+
 		System.out.println("Test Case 3 End\n\n");
 
 	}

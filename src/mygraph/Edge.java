@@ -69,4 +69,9 @@ public class Edge implements IEdge {
 	private static String generateId() {
 		return IdGenerator.generateId("edge");
 	}
+
+	//Extra
+	public String toString() {
+		return "IEdge " + this.mId + " tail = " + this.mTail.getId() + " head = " + this.mHead.getId() + "\n";
+	}
 }

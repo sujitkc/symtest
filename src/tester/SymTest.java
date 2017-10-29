@@ -83,7 +83,7 @@ public class SymTest {
 	 * Else if heuristics are available, try the heuristics and return a solution if possible.
 	 * Else find the longest viable prefix
 	 * 		Update the stack
-	 * 		Backtrack to the last decision and change the decision taken (if else edge was taken earlier, try for the other edge;
+	 * 		Backtrack to the last decision and change the ecisionNodedecision taken (if else edge was taken earlier, try for the other edge;
 	 * 																	 If both edges were already explored, repeat the process) 
 	 * Repeat the process with the new preferred edge. 
 	 * @return
@@ -92,6 +92,13 @@ public class SymTest {
 		TestSequence testseq = null;
 		try {
 			Set<IEdge> targets = convertTargetEdgesToGraphEdges(this.mTargets);
+
+			/* OK
+			System.out.println("SYMTEST DEBUG targets: " + targets);
+			for (IEdge e : targets) 
+				System.out.println("SYMTEST DEBUG target edge: " + e);
+			*/
+
 			Stack<Pair<IEdge, Boolean>> stack = new Stack<Pair<IEdge, Boolean>>();
 			// Initialise the stack with start edge
 			IEdge startEdge = this.mConvertor.getGraphEdge(mCFG.getStartNode()
@@ -120,7 +127,9 @@ public class SymTest {
 						path = algorithm.findCFPath(stack.peek().getFirst()
 								.getHead(), currentTargets);
 					}
+//					System.out.println("SYMTEST DEBUG path: " + path);
 				} else {
+//					System.out.println("SYMTEST DEBUG MAX Iterations exceeded.");
 					// If maximum iterations are done, it is only an empty path
 					// that gets added
 					path = new Path(mGraph);
@@ -128,6 +137,22 @@ public class SymTest {
 				completePath.setPath(addprefix(prefix, path.getPath()));
 				ArrayList<ICFEdge> cfPath = convertPathEdgesToCFGEdges(completePath);
 				// Construct the Symbolic Execution Tree
+				//EXTRA
+//				System.out.println("SYMTEST DEBUG remove cfPath dups");
+				ICFEdge prev = null, curr;
+				ArrayList<Integer> remIndex = new ArrayList<Integer>();
+				for (int i = 0; i < cfPath.size(); ++i) {
+					curr = cfPath.get(i);
+					if (curr == prev) 
+						remIndex.add(i);
+					prev = curr;
+				}
+				for (Integer index : remIndex) {
+					cfPath.remove((int)index);
+				}
+				
+//				System.out.println("SYMTEST DEBUG cfPath: " + cfPath);
+
 				set = SymTestUtil.getSET(cfPath, this.mCFG);
 				// Solve the predicate
 				SolverResult solution;
