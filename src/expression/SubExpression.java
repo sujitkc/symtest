@@ -10,6 +10,7 @@ public class SubExpression extends Expression implements IBinaryExpression {
 	
 	public SubExpression(IProgram program, IExpression lhs, IExpression rhs) throws Exception {
 		super(program, lhs.getType());
+//		System.out.println(program + " " + lhs + " " + rhs);
 		if(lhs.getType() != rhs.getType()) {
 			Exception e = new Exception("SubExpression : Type error.");
 			throw e;

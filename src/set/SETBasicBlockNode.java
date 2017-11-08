@@ -76,21 +76,25 @@ public class SETBasicBlockNode extends SETNode {
 */
 	@Override
 	public IExpression getLatestValue(IIdentifier var) {
-		System.out.println("####GetLV var:" + var.hashCode() + " incoming edge: " + this.mValues);
+//		System.out.println("CHECK LATEST VALUES vars @ " + this + ": " + this.mValues.keySet());
+		for (IIdentifier key : this.mValues.keySet()) {
+//			System.out.println("@@@@" + key.getName() + " == " + var.getName());
+//			System.out.println("###" + key.hashCode() + " == " + var.hashCode());
+//			System.out.println("===" + key.equals(var));
+			if (key.getName().equals(var.getName())) {
+//				System.out.println("FOUND LATEST VALUE" + key.getName());
+				return this.mValues.get(key);
+			}
+		}
+
 //		if(this.mValues.keySet().contains(var)) {
+//			System.out.println("FOUND " + var);
 //			return this.mValues.get(var);
 //		}
-		for (IIdentifier key : this.mValues.keySet()) {
-			System.out.println("@@@@" + key.getName() + " == " + var.getName());
-			if (key.getName().equals(var.getName()))
-				return this.mValues.get(key);
-		}
 		if(this.mIncomingEdge == null) {
-//		System.out.println("SETBN null" + var);
 			return null;
 		}
 		if(this.mIncomingEdge.getTail() == null) {
-//		System.out.println("SETBN null2" + var);
 			return null;
 		}
 		return this.mIncomingEdge.getTail().getLatestValue(var);
@@ -102,7 +106,6 @@ public class SETBasicBlockNode extends SETNode {
 	}
 	
 	public void setValue(IIdentifier var, IExpression val) {
-		System.out.println("SETVALUE " + var.hashCode()+ " " + val);
 		this.mValues.put(var, val);
 	}
 

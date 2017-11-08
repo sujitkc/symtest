@@ -19,6 +19,7 @@ import statement.IStatement;
 class CFGCreator {
         private ICFG mCFG;
         private Stack<ICFGDecisionNode> mConditionalStack;
+        private Stack<ICFGBasicBlockNode> mDanglingBlocks;
         private ICFGBasicBlockNode mCurrBB, mPrevBB;
         private ICFGDecisionNode mCurrDN;
         private ICFGBasicBlockNode mWhileNode, mStartNode;
@@ -34,6 +35,7 @@ class CFGCreator {
                         System.out.println("DEBUG: Create CFG");
 
                         mConditionalStack = new Stack<ICFGDecisionNode>();
+                        mDanglingBlocks = new Stack<ICFGBasicBlockNode>();
 
                         mCurrBB = mStartNode;
                         addBasicBlockNode(true);
@@ -58,10 +60,10 @@ class CFGCreator {
                         System.out.println("");
 
                         if (createLink) {
-                                String edgeId = mPrevBB.getId() + "#" + mCurrBB.getId();
+                                String edgeId = mPrevBB.getId() + "->" + mCurrBB.getId();
                                 ICFEdge blockEdge = new CFEdge(edgeId, mCFG, mPrevBB, mCurrBB);
                                 mCFG.addEdge(blockEdge);
-                                System.out.println("DEBUG: Add edge from " + mPrevBB.getId() + " to " + mCurrBB.getId() + ": " + edgeId);
+                                System.out.println("DOT: Add edge from " + mPrevBB.getId() + " to " + mCurrBB.getId() + ": " + edgeId);
                         }
 
                 } catch (Exception e) {
@@ -87,9 +89,9 @@ class CFGCreator {
 
                         addBasicBlockNode(true);
 
-                        ICFEdge whileEdge = new CFEdge("WHILE#" + mCurrBB.getId(), mCFG, mWhileNode, mCurrBB);
+                        ICFEdge whileEdge = new CFEdge("WHILE->" + mCurrBB.getId(), mCFG, mWhileNode, mCurrBB);
                         mCFG.addEdge(whileEdge);
-                        System.out.println("DEBUG: Add While edge: " + "WHILE#" + mCurrBB.getId());
+                        System.out.println("DOT: Add While edge: " + "WHILE->" + mCurrBB.getId());
                 } catch (Exception e) {
                         System.out.println(e);
                 }
@@ -105,18 +107,18 @@ class CFGCreator {
                         System.out.println("DEBUG: with condition exp " + mCurrDN.getCondition());
                         System.out.println("");
 
-                        String edgeId = mCurrBB.getId() + "#" + mCurrDN.getId();
+                        String edgeId = mCurrBB.getId() + "->" + mCurrDN.getId();
                         ICFEdge blockEdge = new CFEdge(edgeId, mCFG, mCurrBB, mCurrDN);
                         mCFG.addEdge(blockEdge);
-                        System.out.println("DEBUG: Add edge from BB " + mCurrBB.getId() + " to decision node " + mCurrDN.getId() + ": " + edgeId);
+                        System.out.println("DOT: Add edge from BB " + mCurrBB.getId() + " to decision node " + mCurrDN.getId() + ": " + edgeId);
 
                         addBasicBlockNode(false);
                         System.out.println("DEBUG: Add then block node");
 
-                        ICFEdge decisionThenEdge = new CFEdge(mCurrDN.getId() + "#" + mCurrBB.getId(), mCFG, mCurrDN, mCurrBB);
+                        ICFEdge decisionThenEdge = new CFEdge(mCurrDN.getId() + "->" + mCurrBB.getId(), mCFG, mCurrDN, mCurrBB);
                         mCFG.addEdge(decisionThenEdge);
                         mCurrDN.setThenEdge(decisionThenEdge);
-                        System.out.println("DEBUG: Add Decision-Then edge: " + mCurrDN.getId() + "#" + mCurrBB.getId());
+                        System.out.println("DOT: Add Decision-Then edge: " + mCurrDN.getId() + "->" + mCurrBB.getId());
                         if (isTarget) {
                                 targets.add(decisionThenEdge);
                                 System.out.println("DEBUG: Add Decision-Then edge to target set");
@@ -130,13 +132,16 @@ class CFGCreator {
 
         public void setElseBlock(boolean isTarget) {
                 try {
+                		 	//EXTRA
+                		    mDanglingBlocks.push(mCurrBB);
+
                         addBasicBlockNode(false);
                         System.out.println("DEBUG: Add else node ");
 
-                        ICFEdge decisionElseEdge = new CFEdge(mCurrDN.getId() + "#" + mCurrBB.getId(), mCFG, mCurrDN, mCurrBB);
+                        ICFEdge decisionElseEdge = new CFEdge(mCurrDN.getId() + "->" + mCurrBB.getId(), mCFG, mCurrDN, mCurrBB);
                         mCFG.addEdge(decisionElseEdge);
                         mCurrDN.setElseEdge(decisionElseEdge);
-                        System.out.println("DEBUG: Add Decision-Else edge: " + mCurrDN.getId() + "#" + mCurrBB.getId());
+                        System.out.println("DOT: Add Decision-Else edge: " + mCurrDN.getId() + "->" + mCurrBB.getId());
                         if (isTarget) {
                                 targets.add(decisionElseEdge);
                                 System.out.println("DEBUG: Add Decision-Else edge to target set");
@@ -148,22 +153,39 @@ class CFGCreator {
 
         public void resetIfBlock() {
                 try {
-                        addBasicBlockNode(false);
+                			//EXTRA
+                			if (mCurrBB != mDanglingBlocks.peek())
+								mDanglingBlocks.push(mCurrBB);
 
-                        ICFGBasicBlockNode thenNode = (ICFGBasicBlockNode)mCurrDN.getThenSuccessorNode();
-                        ICFEdge thenEndEdge = new CFEdge(thenNode.getId() + "#" + mCurrBB.getId(), mCFG, thenNode, mCurrBB);
+                        addBasicBlockNode(false);
+                        
+//                        ICFGBasicBlockNode thenNode = (ICFGBasicBlockNode)mCurrDN.getThenSuccessorNode();
+//                        ICFGBasicBlockNode elseNode = (ICFGBasicBlockNode)mCurrDN.getElseSuccessorNode();
+                        ICFGBasicBlockNode thenNode = null, elseNode = null;
+                        if (mCurrDN.getElseEdge() != null) {
+							elseNode = (ICFGBasicBlockNode)mDanglingBlocks.pop();
+							thenNode = (ICFGBasicBlockNode)mDanglingBlocks.pop();
+                        } else {
+							thenNode = (ICFGBasicBlockNode)mDanglingBlocks.pop();
+                        }
+
+                        ICFEdge thenEndEdge = new CFEdge(thenNode.getId() + "->" + mCurrBB.getId(), mCFG, thenNode, mCurrBB);
                         mCFG.addEdge(thenEndEdge);
-                        System.out.println("DEBUG: Add Then-EndIf edge: " + thenNode.getId() + "#" + mCurrBB.getId());
+                        System.out.println("DOT: Add Then-EndIf edge: " + thenNode.getId() + "->" + mCurrBB.getId());
 
                         if (mCurrDN.getElseEdge() != null) {
-                                ICFGBasicBlockNode elseNode = (ICFGBasicBlockNode)mCurrDN.getElseSuccessorNode();
-                                ICFEdge elseEndEdge = new CFEdge(elseNode.getId() + "#" + mCurrBB.getId(), mCFG, elseNode, mCurrBB);
+                                ICFEdge elseEndEdge = new CFEdge(elseNode.getId() + "->" + mCurrBB.getId(), mCFG, elseNode, mCurrBB);
                                 mCFG.addEdge(elseEndEdge);
-                                System.out.println("DEBUG: Add Else-EndIf edge: " + elseNode.getId() + "#" + mCurrBB.getId());
+                                System.out.println("DOT: Add Else-EndIf edge: " + elseNode.getId() + "->" + mCurrBB.getId());
                         }
                 } catch (Exception e) {
                         System.out.println(e);
                 }
+                
+                //EXTRA
+                mCurrDN.setEndIfNode(mCurrBB);
+                mDanglingBlocks.push(mCurrBB);
+
 
                 mConditionalStack.pop();
                 if (!mConditionalStack.empty()) {
@@ -176,9 +198,9 @@ class CFGCreator {
 
         public void linkLastNode() {
                 try {
-                        ICFEdge nodeWhileEdge = new CFEdge(mCurrBB.getId() + "#WHILE", mCFG, mCurrBB, mWhileNode);
+                        ICFEdge nodeWhileEdge = new CFEdge(mCurrBB.getId() + "->WHILE", mCFG, mCurrBB, mWhileNode);
                         mCFG.addEdge(nodeWhileEdge);
-                        System.out.println("DEBUG: Add Last BB to While edge: " + nodeWhileEdge.getId());
+                        System.out.println("DOT: Add Last BB to While edge: " + nodeWhileEdge.getId());
 //                        ICFEdge whileStart = new CFEdge("WHILE#" + mStartNode.getId(), mCFG, mWhileNode, mStartNode);
 //                        addEdge(whileStart);
                 } catch (Exception e) {
@@ -186,9 +208,4 @@ class CFGCreator {
                 }
         }
         
-        public void debugCFG() {
-        			System.out.println("----DEBUG CFG-----");
-        			System.out.println("----DEBUG CFG-----");
-
-        }
 }

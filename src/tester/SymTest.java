@@ -1,17 +1,5 @@
 package tester;
 
-import exceptions.UnSatisfiableException;
-import expression.IExpression;
-import expression.IIdentifier;
-import expression.Variable;
-import graph.IEdge;
-import graph.IGraph;
-import graph.INode;
-import graph.IPath;
-import heuristics.ApplyHeuristics;
-import heuristics.RemovingEdgeHeuristicsUtil;
-import heuristics.SwapHeuristicsUtil;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,18 +9,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import mygraph.Edge;
-import mygraph.Path;
-
-import set.SET;
-import set.SETBasicBlockNode;
-import set.SETNode;
-import utilities.Pair;
 import Solver.SolverResult;
 import cfg.ICFEdge;
 import cfg.ICFG;
 import cfg.ICFGDecisionNode;
 import cfg.ICFGNode;
+import exceptions.UnSatisfiableException;
+import expression.IExpression;
+import expression.IIdentifier;
+import expression.Variable;
+import graph.IEdge;
+import graph.IGraph;
+import graph.INode;
+import graph.IPath;
+import heuristics.ApplyHeuristics;
+import mygraph.Path;
+import set.SET;
+import set.SETBasicBlockNode;
+import set.SETNode;
+import utilities.Pair;
 
 public class SymTest {
 
@@ -93,11 +88,8 @@ public class SymTest {
 		try {
 			Set<IEdge> targets = convertTargetEdgesToGraphEdges(this.mTargets);
 
-			/* OK
-			System.out.println("SYMTEST DEBUG targets: " + targets);
-			for (IEdge e : targets) 
-				System.out.println("SYMTEST DEBUG target edge: " + e);
-			*/
+//			OK
+//			System.out.println("TARGETS: " + targets);
 
 			Stack<Pair<IEdge, Boolean>> stack = new Stack<Pair<IEdge, Boolean>>();
 			// Initialise the stack with start edge
@@ -111,6 +103,8 @@ public class SymTest {
 			Set<IEdge> currentTargets = new HashSet<IEdge>(targets);
 			while ((!stack.isEmpty()) && !(stack.peek().getFirst().equals(startEdge) && !stack.peek()
 					.getSecond())) {
+//				System.out.println("SYMTEST while stack: " + stack.peek() + "(" + stack.size() + ")" + " completePath:" + completePath);
+
 				// Obtain the path that traverses the targets.
 				IPath path;
 				if (!hasEncounteredMaximumIterations(completePath)) {
@@ -118,46 +112,41 @@ public class SymTest {
 							this.mGraph, currentTargets,
 							this.mConvertor.getGraphNode(this.mTarget));
 
-					if (stack.size() != 1) {
-
-						path = algorithm.findCFPath(stack.peek().getFirst()
-								.getHead(), currentTargets);
-					} else {
+//					REFACTOR
+					if (stack.size() == 1) 
 						prefix.add(startEdge);
-						path = algorithm.findCFPath(stack.peek().getFirst()
-								.getHead(), currentTargets);
-					}
-//					System.out.println("SYMTEST DEBUG path: " + path);
+
+					System.out.println("Symtest StackTop:" + prefix);
+					path = algorithm.findCFPath(stack.peek().getFirst()
+							.getHead(), currentTargets);
+					
+//					System.out.println("SYMTEST while-path:" + path);
 				} else {
-//					System.out.println("SYMTEST DEBUG MAX Iterations exceeded.");
 					// If maximum iterations are done, it is only an empty path
 					// that gets added
 					path = new Path(mGraph);
 				}
+				
+				System.out.println("Symtest Prefix:" + prefix);
+				System.out.println("Symtest path:" + path);
+				
 				completePath.setPath(addprefix(prefix, path.getPath()));
+
+				System.out.println("SYMTEST completePath: " + completePath);
 				ArrayList<ICFEdge> cfPath = convertPathEdgesToCFGEdges(completePath);
 				// Construct the Symbolic Execution Tree
-				//EXTRA
-//				System.out.println("SYMTEST DEBUG remove cfPath dups");
-				ICFEdge prev = null, curr;
-				ArrayList<Integer> remIndex = new ArrayList<Integer>();
-				for (int i = 0; i < cfPath.size(); ++i) {
-					curr = cfPath.get(i);
-					if (curr == prev) 
-						remIndex.add(i);
-					prev = curr;
-				}
-				for (Integer index : remIndex) {
-					cfPath.remove((int)index);
-				}
-				
-//				System.out.println("SYMTEST DEBUG cfPath: " + cfPath);
+
+//				System.out.println("SYMTEST cfPath: " + cfPath);
 
 				set = SymTestUtil.getSET(cfPath, this.mCFG);
+				System.out.println("");
+				System.out.println("SYMTEST got SET");
+				System.out.println("");
 				// Solve the predicate
 				SolverResult solution;
 				try {
 
+					System.out.println("@@@@@@@@@@@@@SOLVE SEQ@@@@@@@@@@@@");
 					solution = SymTestUtil.solveSequence(set);
 					return (this.convert(set.getLeafNodes().iterator().next(),
 							solution));
@@ -180,14 +169,22 @@ public class SymTest {
 					}
 				}
 				if (!hasEncounteredMaximumIterations(completePath)) {
+					System.out.println("@SYMTEST Get LVP");
 					// Get Longest Viable Prefix(LVP)
 					int satisfiableIndex = SymTestUtil
 							.getLongestSatisfiablePrefix(cfPath, mCFG);
+					System.out.println("@@@SYMTEST GOT LVP sat index:" + satisfiableIndex);
 					List<IEdge> satisfiablePrefix = new ArrayList<IEdge>();
-					satisfiablePrefix.addAll(completePath.getPath().subList(
-							(completePath.getPath().size() - 1)
-									- path.getPath().size(),
-							satisfiableIndex + 2));
+//					FIX?
+					if (stack.size() != 1) {
+						satisfiablePrefix.addAll(completePath.getPath().subList(
+								(completePath.getPath().size() - 1)
+										- path.getPath().size(),
+								satisfiableIndex + 2));
+					} else {
+						satisfiablePrefix.addAll(completePath.getPath().subList(0 
+								,satisfiableIndex + 2));
+					}
 
 					updatestack(stack, satisfiablePrefix);
 					prefix.clear();
@@ -246,6 +243,9 @@ public class SymTest {
 		if (!mTarget.getOutgoingEdgeList().isEmpty()) {
 		count = Collections.frequency(completePath.getPath(),
 				mConvertor.getGraphEdge(mTarget.getOutgoingEdgeList().get(0)));
+		//EXTRA
+		System.out.println("ITERATION: " + count);
+
 		if (count >= MAXIMUM_ITERATIONS)
 			return true;
 		else

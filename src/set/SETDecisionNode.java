@@ -75,7 +75,6 @@ public class SETDecisionNode extends SETNode {
 			return null;
 		}
 
-//		System.out.println("SETDN " + this);
 		return this.mIncomingEdge.getTail().getLatestValue(var);
 	}
 	

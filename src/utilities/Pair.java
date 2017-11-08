@@ -21,5 +21,10 @@ public class Pair<T1, T2> implements IPair<T1, T2>{
 	public boolean equals(T1 first, T2 second) {
 		return (first.equals(this.mFirst) && second.equals(this.mSecond)); 
 	}
+	
+	@Override
+	public String toString() {
+		return "< " + mFirst.toString() + ", " + mSecond.toString() + " >";
+	}
 
 }

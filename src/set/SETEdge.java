@@ -11,7 +11,7 @@ public class SETEdge {
 	
 	//EXTRA
 	public String toString() {
-		return mTail + " " + mHead;
+		return mTail + "->" + mHead;
 	}
 	
 	public SETEdge(SET set, SETNode tail, SETNode head) {

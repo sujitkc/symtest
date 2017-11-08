@@ -1,6 +1,7 @@
 package expression;
 
 import program.IProgram;
+import java.util.Objects;
 import visitors.IExprVisitor;
 
 public class Variable extends Expression implements IIdentifier {
@@ -25,6 +26,26 @@ public class Variable extends Expression implements IIdentifier {
 		}
 		program.addVariable(this);
 	}
+	
+	
+	/*
+	//EXTRA
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) return true;
+		else if (!(o instanceof Variable)) {
+			return false;
+		}
+		
+		Variable v = (Variable) o;
+		return v.getName().equals(this.getName());
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(mName);
+	}
+	*/
 	
 
 	@Override

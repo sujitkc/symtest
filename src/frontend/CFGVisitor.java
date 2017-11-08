@@ -9,8 +9,11 @@ import java.util.Map;
 
 import cfg.ICFG;
 import expression.AddExpression;
+import expression.AndExpression;
+import expression.SubExpression;
 import expression.ConcreteConstant;
 import expression.EqualsExpression;
+import expression.Expression;
 import expression.GreaterThanEqualToExpression;
 import expression.GreaterThanExpression;
 import expression.IExpression;
@@ -20,6 +23,7 @@ import expression.LesserThanEqualToExpression;
 import expression.LesserThanExpression;
 import expression.MulExpression;
 import expression.NotExpression;
+import expression.OrExpression;
 import expression.Variable;
 import statement.IStatement;
 import statement.Statement;
@@ -58,7 +62,7 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                 mCFG = mCreator.getCFG();
                 visitChildren(ctx); 
                 mCreator.linkLastNode();
-                mCreator.debugCFG();
+                System.out.println("------------------------------------------------------------");
 
 				SymTest st = new SymTest(mCFG, mCreator.targets);
 				TestSequence seq = st.generateTestSequence();
@@ -267,6 +271,39 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                 }
                 return val;
         }
+
+        @Override 
+        public Value visitOrExp(CymbolParser.OrExpContext ctx) { 
+                System.out.println("DEBUG: Or EXP: " + ctx.expr(0).getText() + " || " + ctx.expr(1).getText());
+                Value vleft = visit(ctx.expr(0));
+                Value vright = visit(ctx.expr(1));
+                Value val = null;
+                try {
+                        OrExpression orExp = new OrExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
+						//System.out.println("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
+                        val = new Value(orExp);
+                } catch (Exception e) {
+                        System.out.println("Exception Or: " + e);
+                }
+                return val;
+        }
+
+        @Override 
+        public Value visitAndExp(CymbolParser.AndExpContext ctx) { 
+                System.out.println("DEBUG: AND EXP: " + ctx.expr(0).getText() + " && " + ctx.expr(1).getText());
+                Value vleft = visit(ctx.expr(0).getChild(1));
+                Value vright = visit(ctx.expr(1).getChild(1));
+                Value val = null;
+				System.out.println("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
+                try {
+                        AndExpression andExp = new AndExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
+                        val = new Value(andExp);
+                } catch (Exception e) {
+                        System.out.println("Exception AND: " + e);
+                }
+                return val;
+        }
+
         @Override 
         public Value visitMult(CymbolParser.MultContext ctx) { 
                 System.out.println("DEBUG: MULT");
@@ -289,7 +326,11 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                 Value vright = visit(ctx.expr(1));
                 Value val = null;
                 try {
-                        AddExpression exp = new AddExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
+                			Expression exp;
+                		    if (ctx.getChild(1).getText().equals("-"))
+							exp = new SubExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
+                		    else 
+							exp = new AddExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
                         val = new Value(exp);
                 } catch (Exception e){
                         System.out.println("ADDSUB:" + e);
@@ -326,21 +367,23 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
         }
 
         @Override 
-        public Value visitNegate(CymbolParser.NegateContext ctx) { 
-                /*
-                 *System.out.println("DEBUG: NEGATE STUB");
-                 */
-                return visitChildren(ctx); 
+        public Value visitParens(CymbolParser.ParensContext ctx) { 
+                
+                System.out.println("DEBUG: Parens STUB ");
+//                return visitChildren(ctx.expr()); 
+                return visitChildren(ctx.expr()); 
         }
 
         @Override 
         public Value visitInt(CymbolParser.IntContext ctx) { 
-                /*
-                 *System.out.println("DEBUG: INT="+ ctx.INT().getText());
-                 */
+                
+                 System.out.println("DEBUG: INT="+ ctx.getText());
+                 
                 Value val = null; 
                 try {
                         Integer intVal = Integer.parseInt(ctx.INT().getText());
+                        if (ctx.MINUS() != null)
+                        		intVal = intVal * -1;
                         ConcreteConstant constant = new ConcreteConstant(intVal, mCFG);
                         val = new Value(constant);
                 } catch (Exception e) {

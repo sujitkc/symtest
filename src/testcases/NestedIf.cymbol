@@ -1,38 +1,17 @@
-
 void main() {
-
         int start = -1;
+        int var;
         while (1) {
-                if (prev_out != out) {
-                        t_on = 1;
-                } else {
-                        t_on = 0;
-                }
-                xx = 1;
-                if (prev_start - start == -1) {
-                        if (x5 == 1) {
-                                out = c;
-                        } else {
-                                out = prev_out;
-                        }
-                } else {
-                        x5 = 0;
-                }
-
-                if (prev_start - start == -1) {
-                        if (x5 == 1) {
-                                out = c;
-                        }
-                } else {
-                        x5 = 0;
-                }
-
-                if (prev_start - start == -1) {
-                        if (x5 == 1) {
-                                out = c;
-                        }
-                }
-
+        	  var = scanf();
+        	  if (var > 0) {
+        	  	start = 20;
+        	  } else {
+        	    if (var < -5) {
+        	      start = 30;
+        	    } else {
+        	      start = 40;
+        	    }
+        	  }
+        	  
         }
 }
-

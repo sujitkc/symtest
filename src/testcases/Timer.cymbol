@@ -1,0 +1,39 @@
+
+void main() {
+		int start = 0;
+		int x5; 
+		int prev_start;
+		int prev_out;
+		int out;
+		int t_on;
+		int c = 10;
+		prev_start = 0;
+		prev_out = 0;
+		out = 0;
+		while (1) {
+			start = scanf();
+			if (prev_start - start == -1) {
+				x5 = 1;
+			} else {
+				x5 = 0;
+			}
+
+			if (x5 == 1) {
+				out = c;
+			} else {
+				if (prev_out != 0) {
+					out = prev_out - 1;
+				} else {
+					out = prev_out;
+				}
+			}
+			
+			if (out == c) {
+				t_on = 1;
+			} else {
+				t_on = 0;
+			}
+			prev_start = start;
+			prev_out = out;
+		}
+}

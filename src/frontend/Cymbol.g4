@@ -37,7 +37,6 @@ stat    :   block                           #StatBlock
 expr    :   ID '(' exprList? ')'            #Call
         |   'scanf()'                       #Input
         |   expr '[' expr ']'               #Index
-        |   '-' expr                        #Negate
         |   '!' expr                        #Not
         |   expr '*' expr                   #Mult
         |   expr ('+' | '-') expr           #AddSub
@@ -47,8 +46,10 @@ expr    :   ID '(' exprList? ')'            #Call
         |   expr '>=' expr                  #GreaterThanEqual
         |   expr '<' expr                   #LessThan
         |   expr '<=' expr                  #LessThanEqual
+        |   expr '&&' expr                  #AndExp
+        |   expr '||' expr                  #OrExp
         |   ID                              #Var
-        |   (MINUS)? INT                    #Int
+        |   MINUS? INT                      #Int
         |   '(' expr ')'                    #Parens
         ;
 

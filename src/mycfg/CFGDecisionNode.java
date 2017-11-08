@@ -15,6 +15,8 @@ public class CFGDecisionNode extends CFGNode implements ICFGDecisionNode {
 	private IExpression mCondition;
 	private ICFEdge mThenEdge;
 	private ICFEdge mElseEdge;
+	//EXTRA
+	private ICFGNode endIfNode;
 	
 	public CFGDecisionNode(ICFG cfg, IExpression c) {
 		this.mCFG = cfg;
@@ -155,6 +157,17 @@ public class CFGDecisionNode extends CFGNode implements ICFGDecisionNode {
 		return list;
 	}
 	
+	@Override
+	public ICFGNode setEndIfNode(ICFGNode node) {
+		this.endIfNode = node;
+		return node;
+	}
+	
+	@Override
+	public ICFGNode getEndIfNode() {
+		return this.endIfNode;
+	}
+	
 	private static String generateId() {
 		return IdGenerator.generateId("CFGDecisionNode");
 	}
@@ -185,4 +198,5 @@ public class CFGDecisionNode extends CFGNode implements ICFGDecisionNode {
 		
 		return s;
 	}
+	
 }

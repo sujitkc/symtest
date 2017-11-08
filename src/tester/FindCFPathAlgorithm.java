@@ -1,16 +1,15 @@
 package tester;
 
-import graph.IEdge;
-import graph.IGraph;
-import graph.INode;
-import graph.IPath;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import graph.IEdge;
+import graph.IGraph;
+import graph.INode;
+import graph.IPath;
 import mygraph.Path;
 
 public class FindCFPathAlgorithm {
@@ -63,6 +62,8 @@ public class FindCFPathAlgorithm {
 		path = new Path(this.mGraph);
 		IPath head = this.findPathToLoopStartNode(this.mGraph.getRoot());
 		path.concatenate(head);
+		
+		System.out.println("FindCFPath Initialized - path = " + path);
 
 	}
 	
@@ -92,9 +93,15 @@ public class FindCFPathAlgorithm {
 						+ "outgoing edges.");
 			}
 			IEdge nextEdge = nextEdges.get(0);
-			path.concatenate(nextEdge);
-			path.concatenate(findPathToLoopStartNode(nextEdge.getHead()));
+//       	FIX
+//       	EXTRA : causes x->start_node to be appended twice, once here and the other one in findCFPath.
+//       	Remove the last edge from head.
+			if (nextEdge.getHead() != this.mLoopStartNode) {
+				path.concatenate(nextEdge);
+				path.concatenate(findPathToLoopStartNode(nextEdge.getHead()));
+			}
 		}
+
 		return path;
 	}
 	
@@ -155,9 +162,14 @@ public class FindCFPathAlgorithm {
 		for(IEdge e : targets) {
 			currentTargets.add(e);
 		}
+		//EXTRA?
+		path = new Path(this.mGraph);
 		while(!currentTargets.isEmpty()) {
 			this.mTable = getEmptyTable();
 			IPath newAcyclicPath = findLongestAcyclicPath(startNode, currentTargets);
+			System.out.println("Start node: " + startNode.getId());
+			System.out.println("Acyclic path: " + newAcyclicPath);
+			System.out.println("Targets: " + targets);
 /*
 			// Adding the back edge.
 			List<IEdge> p = newAcyclicPath.getPath();
@@ -169,17 +181,13 @@ public class FindCFPathAlgorithm {
 			currentTargets = updateTargets(newAcyclicPath, currentTargets);
 			path.concatenate(newAcyclicPath);
 
-			//EXTRA
-			System.out.println("SYMTEST DEBUG removing dups");
-			path.removeDups();
-
-			System.out.println("path = " + path);
 			List<IEdge> loopEdgeList = this.mTargetNode.getOutgoingEdgeList();
 			if(!loopEdgeList.isEmpty()) {
 				path.concatenate(this.mTargetNode.getOutgoingEdgeList().get(0));
 				startNode = this.mLoopStartNode;
 			}
 			if(mTargetNode.getOutgoingEdgeList().size() == 0) break;
+			System.out.println("Path: " + path);
 
 		}
 		return path;
