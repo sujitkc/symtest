@@ -1,5 +1,24 @@
 package frontend;
 
+/**
+ * The ANTLR visitor pattern. Each function defines a set of operations to be
+ * done whenever a grammar clause is identified.
+ * The visitor recursively traverses each node in the AST and invokes functions
+ * corresponding to each grammar rule.
+ * Each function is expected to have the same return type. Here Value type is
+ * chosen as a wrapper for any specific type object that each function might
+ * return.
+ * There's a function corresponding to each rule in the grammar. In case there's
+ * nothing special to be done, the function just visits its children or is
+ * omitted (the default definition does the same thing).
+ * 
+ * For more info about ANTLR and and its functions, please refer "The Definitive
+ * ANTLR 4 Reference". It's an amazing book!
+ * 
+ * TODO 
+ * Add rules for Booleans & Division
+ */
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -14,6 +33,7 @@ import expression.AndExpression;
 import expression.ConcreteConstant;
 import expression.EqualsExpression;
 import expression.Expression;
+import expression.False;
 import expression.GreaterThanEqualToExpression;
 import expression.GreaterThanExpression;
 import expression.IExpression;
@@ -25,386 +45,518 @@ import expression.MulExpression;
 import expression.NotExpression;
 import expression.OrExpression;
 import expression.SubExpression;
+import expression.Type;
 import expression.Variable;
 import statement.IStatement;
 import statement.Statement;
 import tester.SymTest;
 import tester.TestSequence;
 
-
 public class CFGVisitor extends CymbolBaseVisitor<Value> {
 
-        private ICFG mCFG;
-        private CFGCreator mCreator;
-        private HashMap<Integer, String> targetMap;
-        
-        private static final Logger logger = 
-			Logger.getLogger(CFGVisitor.class.getName());
+	private ICFG mCFG;
+	/**
+	 * The main object used for CFG creation. Provides convenience function to
+	 * add program elements to the CFG. Please refer the source file for
+	 * detailed
+	 * comments.
+	 */
+	private CFGCreator mCreator;
+	/**
+	 * Mapping of Line Number to Coverage type. Coverage applies only to
+	 * conditional nodes and their then/else edges.
+	 * Coverage type could be
+	 * - I : Cover only the then part of the condition.
+	 * - E : Cover only the else part of the condition.
+	 * - B : Cover both the parts of the condition.
+	 * Target edges are highlighted in red in the visualized CFG.
+	 */
+	private Map<Integer, String> targetMap;
 
-        public CFGVisitor(String targetFileName) {
-                targetMap = new HashMap<Integer, String>();
-                File targetFile = new File(targetFileName);
-                try {
-                        BufferedReader br = new BufferedReader(new FileReader(targetFile));
-                        String line;
-                        logger.info("Target Mapping:");
-                        while ((line = br.readLine()) != null) {
-                                String[] parts = line.trim().split("-");
-                                targetMap.put(Integer.parseInt(parts[0]), parts[1]);
-                                logger.info("Line " + parts[0] + " " + parts[1]);
-                        }
-                        br.close();
-                } catch (Exception e) {
-                        logger.severe(e.toString());
-                }
-        }
+	private static final Logger logger = Logger
+			.getLogger(CFGVisitor.class.getName());
 
-        @Override 
-        public Value visitFile(CymbolParser.FileContext ctx) { 
-                mCreator = new CFGCreator();
-                mCFG = mCreator.getCFG();
-                visitChildren(ctx); 
-                mCreator.linkLastNode();
-                logger.finest(" ");
+	/**
+	 * Read the target edges and coverage type.
+	 * Target file format is:
+	 * LINE_NO - COVERAGE_TYPE
+	 * 
+	 * @param targetFileName
+	 *            Contains the line number - coverage type mapping.
+	 */
+	public CFGVisitor(String targetFileName) {
+		targetMap = new HashMap<Integer, String>();
+		File targetFile = new File(targetFileName);
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(targetFile));
+			String line;
+			logger.info("Target Mapping:");
+			while ((line = br.readLine()) != null) {
+				String[] parts = line.trim().split("-");
+				targetMap.put(Integer.parseInt(parts[0]), parts[1]);
+				logger.info("Line " + parts[0] + " " + parts[1]);
+			}
+			br.close();
+		} catch (Exception e) {
+			logger.severe(e.toString());
+		}
+	}
 
-				SymTest st = new SymTest(mCFG, mCreator.targets);
-				TestSequence seq = st.generateTestSequence();
-				Map<IIdentifier, List<Object>> testseq = seq.getTestSequence();
-				System.out.println("Test Seq: " + testseq);
+	/**
+	 * The first method invoked by the visitor at the beginning of the source
+	 * file.
+	 * Sets up initial values and initiates traversal.
+	 */
+	@Override
+	public Value visitFile(CymbolParser.FileContext ctx) {
+		mCreator = new CFGCreator();
+		mCFG = mCreator.getCFG();
+		// visit the nodes in the AST
+		visitChildren(ctx);
+		mCreator.linkLastNode();
 
-                return null;
-        }
+		// TODO Add more documentation about what's going on here.
+		SymTest st = new SymTest(mCFG, mCreator.targets);
+		TestSequence seq = st.generateTestSequence();
+		Map<IIdentifier, List<Object>> testseq = seq.getTestSequence();
+		System.out.println("Test Seq: " + testseq);
 
-        @Override 
-        public Value visitVarDecl(CymbolParser.VarDeclContext ctx) { 
-                logger.finest("DEBUG: VarDECL:- TYPE:" + ctx.type().getText() + " VAR:" + ctx.ID().getText());
+		return null;
+	}
 
-                Value val = null;
-                try {
-                        Variable var = new Variable(ctx.ID().getText(), mCFG);
-                        if (ctx.expr() != null) {
-                                logger.finest(" EXPR: " +ctx.expr().getText());
-                                Value expr = visit(ctx.expr());
-                                Statement stmnt = new Statement(mCFG, var, (IExpression)expr.get());
-                                mCreator.addStatement(stmnt);
-                                val = new Value(stmnt);
-                        } else {
-                                Statement stmnt = new Statement(mCFG, var, new ConcreteConstant(0, mCFG));
-                                logger.finest(" ");
-                                mCreator.addStatement(stmnt);
-                                val = new Value(stmnt);
-                        }
-                } catch (Exception e) {
-                        logger.severe("VarDECL:" + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * varDecl : type ID ('=' expr)? ';'
+	 * Ex:
+	 * int v1 = 22;
+	 * boolean isEmpty = !isFull;
+	 */
+	@Override
+	public Value visitVarDecl(CymbolParser.VarDeclContext ctx) {
+		logger.finest("Type-" + ctx.type().getText() + " varId-"
+				+ ctx.ID().getText());
 
-        @Override 
-        public Value visitBlock(CymbolParser.BlockContext ctx) { 
-                /*
-                 *logger.finest("DEBUG: BLOCK Child Count:" + ctx.getChildCount());
-                 */
-                return visitChildren(ctx); 
-        }
+		Value val = null;
+		try {
+			String varType = ctx.ID().getText();
+			Variable var = new Variable(varType, mCFG);
+			if (ctx.expr() != null) {
+				logger.finest("Expr-" + ctx.expr().getText());
+				Value expr = visit(ctx.expr());
+				Statement stmnt = new Statement(mCFG, var,
+						(IExpression) expr.get());
+				mCreator.addStatement(stmnt);
+				val = new Value(stmnt);
+			} else {
+				// all variables are given a default value of 0/False if default
+				// value is absent.
+				Statement stmnt = null;
+				if (var.getType() == Type.BOOLEAN) {
+					stmnt = new Statement(mCFG, var, new False(mCFG));
+				} else {
+					stmnt = new Statement(mCFG, var,
+							new ConcreteConstant(0, mCFG));
+				}
+				mCreator.addStatement(stmnt);
+				val = new Value(stmnt);
+			}
+		} catch (Exception e) {
+			logger.severe("VarDECL:" + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitStatBlock(CymbolParser.StatBlockContext ctx) { 
-                /*
-                 *logger.finest("DEBUG: STATEMENT BLOCK");
-                 */
-                return visitChildren(ctx); 
-        }
+	/*
+	 * @Override
+	 * public Value visitBlock(CymbolParser.BlockContext ctx) {
+	 * return visitChildren(ctx);
+	 * }
+	 * 
+	 * @Override
+	 * public Value visitStatBlock(CymbolParser.StatBlockContext ctx) {
+	 * return visitChildren(ctx);
+	 * }
+	 */
 
-        @Override 
-        public Value visitWhile(CymbolParser.WhileContext ctx) { 
-                logger.finest("DEBUG: WHILE");
-                mCreator.addWhile();
-                visit(ctx.stat());
-                return null;
-                //return visitChildren(ctx); 
-        }
+	/**
+	 * Grammar rule:
+	 * 'while' expr stat
+	 * 
+	 * The expression is ignored for now. It is assumed that there will only be
+	 * one loops that operates infinitely.
+	 */
+	@Override
+	public Value visitWhile(CymbolParser.WhileContext ctx) {
+		mCreator.addWhile();
+		visit(ctx.stat());
+		return null;
+	}
 
-        @Override 
-        public Value visitIf(CymbolParser.IfContext ctx) { 
-                int lineNo = ctx.getStart().getLine();
-                boolean isTargetIf = false;
-                boolean isTargetElse = false;
-                String targetPath = targetMap.get(lineNo);
-                if (targetPath != null) {
-                        if (targetPath.equals("I")) {
-                                isTargetIf = true;
-                        } else if (targetPath.equals("B")) {
-                        			isTargetIf = isTargetElse = true;
-                        } else {
-                                isTargetElse = true;
-                        }
-                }
+	/**
+	 * Grammar rule:
+	 * 'if' '('expr')' stat ('else' stat)?
+	 * 
+	 */
+	@Override
+	public Value visitIf(CymbolParser.IfContext ctx) {
+		int lineNo = ctx.getStart().getLine();
+		logger.finest("If Line#" + lineNo);
 
-                logger.finest("DEBUG: (" + lineNo + ") IF");
+		boolean isTargetIf = false;
+		boolean isTargetElse = false;
+		// Check whether an if edge is in the target set.
+		String targetPath = targetMap.get(lineNo);
 
-                //logger.finest("DEBUG: IF COND text: " + ctx.expr().getText());
-                //logger.finest("DEBUG: 0 " + ctx.expr().getChildCount());
-                //logger.finest("DEBUG: 1 " + ctx.expr().getChild(0).getText());
-                Value vexp = visit(ctx.expr());
-                mCreator.addConditional((IExpression) vexp.get(), isTargetIf);
-                //mCreator.setThenBlock();
-                visit(ctx.stat(0));
-                if (ctx.stat(1) != null) {
-                        mCreator.setElseBlock(isTargetElse);
-                        visit(ctx.stat(1));
-                }
-                mCreator.resetIfBlock();
-                return null;
-        }
+		if (targetPath != null) {
+			if (targetPath.equals("I")) {
+				isTargetIf = true;
+			} else if (targetPath.equals("E")) {
+				isTargetElse = true;
+			} else {
+				isTargetIf = isTargetElse = true;
+			}
+		}
 
+		// Get the if condition.
+		Value vexp = visit(ctx.expr());
+		// Add the then block.
+		mCreator.addConditional((IExpression) vexp.get(), isTargetIf);
+		visit(ctx.stat(0));
+		// Check if an else part exists.
+		// TODO Clean up. Find better logic to check the presence of else.
+		if (ctx.stat().size() > 1) {
+			// Add else block.
+			mCreator.setElseBlock(isTargetElse);
+			visit(ctx.stat(1));
+		}
+		mCreator.resetIfBlock();
+		return null;
+	}
 
-        @Override 
-        public Value visitAssign(CymbolParser.AssignContext ctx) { 
-                logger.finest("DEBUG: ASSIGN ");
-                Value vleft = visit(ctx.expr(0));
-                Value vright = visit(ctx.expr(1));
-                Value val = null;
-                try {
-                        Statement assign = new Statement(mCFG, (IIdentifier)vleft.get(), (IExpression)vright.get());
-                        mCreator.addStatement(assign);
-                        val = new Value(assign);
-                } catch (Exception e) {
-                        logger.severe("ASSIGN: " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr '=' expr ';'
+	 */
+	@Override
+	public Value visitAssign(CymbolParser.AssignContext ctx) {
+		logger.finest("Assign");
+		// visit lhs
+		Value vleft = visit(ctx.expr(0));
+		// visit rhs
+		Value vright = visit(ctx.expr(1));
+		Value val = null;
+		try {
+			Statement assign = new Statement(mCFG, (IIdentifier) vleft.get(),
+					(IExpression) vright.get());
+			mCreator.addStatement(assign);
+			val = new Value(assign);
+		} catch (Exception e) {
+			logger.severe("Assign: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitExp(CymbolParser.ExpContext ctx) { 
-                logger.finest("DEBUG: EXP");
-                Value vexp = visit(ctx.expr());
-                mCreator.addStatement((IStatement)vexp);
-                return vexp;
-        }
+	/**
+	 * Grammar rule:
+	 * expr ';'
+	 */
+	@Override
+	public Value visitExp(CymbolParser.ExpContext ctx) {
+		logger.finest("Exp");
+		Value vexp = visit(ctx.expr());
+		mCreator.addStatement((IStatement) vexp);
+		return vexp;
+	}
 
-        @Override 
-        public Value visitNot(CymbolParser.NotContext ctx) { 
-                logger.finest("DEBUG: NOT EXP");
-                Value exp = visit(ctx.expr());
-                Value val = null;
-                try {
-                        NotExpression nexp = new NotExpression(mCFG, (IExpression)exp.get());
-                        val = new Value(nexp);
-                } catch (Exception e) {
-                        logger.severe("NOT: " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * '!' expr
+	 */
+	@Override
+	public Value visitNot(CymbolParser.NotContext ctx) {
+		logger.finest("Not exp");
+		Value exp = visit(ctx.expr());
+		Value val = null;
+		try {
+			NotExpression nexp = new NotExpression(mCFG,
+					(IExpression) exp.get());
+			val = new Value(nexp);
+		} catch (Exception e) {
+			logger.severe("Not: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitNotEqual(CymbolParser.NotEqualContext ctx) { 
-                logger.finest("DEBUG: NOT EQUALS EXP: " + ctx.expr(0).getText() + " NOT EQUALS? " + ctx.expr(1).getText());
-                Value vleft = visit(ctx.expr(0));
-                Value vright = visit(ctx.expr(1));
-                Value val = null;
-                try {
-                        EqualsExpression eql = new EqualsExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-                        NotExpression neql = new NotExpression(mCFG, eql);
-                        val = new Value(neql);
-                } catch (Exception e) {
-                        logger.severe("EQUALS: " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr '!=' expr
+	 */
+	@Override
+	public Value visitNotEqual(CymbolParser.NotEqualContext ctx) {
+		logger.finest("Not equals");
+		Value vleft = visit(ctx.expr(0));
+		Value vright = visit(ctx.expr(1));
+		Value val = null;
+		try {
+			EqualsExpression eql = new EqualsExpression(mCFG,
+					(IExpression) vleft.get(), (IExpression) vright.get());
+			NotExpression neql = new NotExpression(mCFG, eql);
+			val = new Value(neql);
+		} catch (Exception e) {
+			logger.severe("Not equals: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitGreaterThan(CymbolParser.GreaterThanContext ctx) { 
-                logger.finest("DEBUG: GREATER THAN EXP: " + ctx.expr(0).getText() + " GREATER THAN " + ctx.expr(1).getText());
-                Value vleft = visit(ctx.expr(0));
-                Value vright = visit(ctx.expr(1));
-                Value val = null;
-                try {
-                        GreaterThanExpression grt = new GreaterThanExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-						//logger.finest("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
-                        val = new Value(grt);
-                } catch (Exception e) {
-                        logger.severe("Exception GREATER THAN: " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr '>' expr
+	 */
+	@Override
+	public Value visitGreaterThan(CymbolParser.GreaterThanContext ctx) {
+		logger.finest("Greater than");
+		Value vleft = visit(ctx.expr(0));
+		Value vright = visit(ctx.expr(1));
+		Value val = null;
+		try {
+			GreaterThanExpression grt = new GreaterThanExpression(mCFG,
+					(IExpression) vleft.get(), (IExpression) vright.get());
+			val = new Value(grt);
+		} catch (Exception e) {
+			logger.severe("Greater than: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitGreaterThanEqual(CymbolParser.GreaterThanEqualContext ctx) { 
-                logger.finest("DEBUG: GREATER THAN EQUAL EXP: " + ctx.expr(0).getText() + " GREATER THAN EQUALS " + ctx.expr(1).getText());
-                Value vleft = visit(ctx.expr(0));
-                Value vright = visit(ctx.expr(1));
-                Value val = null;
-                try {
-                        GreaterThanEqualToExpression grtEq = new GreaterThanEqualToExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-                        val = new Value(grtEq);
-                } catch (Exception e) {
-                        logger.severe("GREATER THAN EQ: " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr '>=' expr
+	 */
+	@Override
+	public Value visitGreaterThanEqual(
+			CymbolParser.GreaterThanEqualContext ctx) {
+		logger.finest("Greater than or equal");
+		Value vleft = visit(ctx.expr(0));
+		Value vright = visit(ctx.expr(1));
+		Value val = null;
+		try {
+			GreaterThanEqualToExpression grtEq = new GreaterThanEqualToExpression(
+					mCFG, (IExpression) vleft.get(),
+					(IExpression) vright.get());
+			val = new Value(grtEq);
+		} catch (Exception e) {
+			logger.severe("Greater than or equal: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitLessThan(CymbolParser.LessThanContext ctx) { 
-                logger.finest("DEBUG: LESSER THAN EXP: " + ctx.expr(0).getText() + " LESSER THAN " + ctx.expr(1).getText());
-                Value vleft = visit(ctx.expr(0));
-                Value vright = visit(ctx.expr(1));
-                Value val = null;
-                try {
-                        LesserThanExpression lrt = new LesserThanExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-                        val = new Value(lrt);
-                } catch (Exception e) {
-                        logger.severe("LESSER THAN: " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr '<' expr
+	 */
+	@Override
+	public Value visitLessThan(CymbolParser.LessThanContext ctx) {
+		logger.finest("Lesser than");
+		Value vleft = visit(ctx.expr(0));
+		Value vright = visit(ctx.expr(1));
+		Value val = null;
+		try {
+			LesserThanExpression lrt = new LesserThanExpression(mCFG,
+					(IExpression) vleft.get(), (IExpression) vright.get());
+			val = new Value(lrt);
+		} catch (Exception e) {
+			logger.severe("Lesser than: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitLessThanEqual(CymbolParser.LessThanEqualContext ctx) { 
-                logger.finest("DEBUG: LESSER THAN EQUAL EXP: " + ctx.expr(0).getText() + " LESSER THAN EQUALS " + ctx.expr(1).getText());
-                Value vleft = visit(ctx.expr(0));
-                Value vright = visit(ctx.expr(1));
-                Value val = null;
-                try {
-                        LesserThanEqualToExpression lrtEq = new LesserThanEqualToExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-                        val = new Value(lrtEq);
-                } catch (Exception e) {
-                        logger.severe("LESSER THAN EQ: " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr '<=' expr
+	 */
+	@Override
+	public Value visitLessThanEqual(CymbolParser.LessThanEqualContext ctx) {
+		logger.finest("Lesser than or equal");
+		Value vleft = visit(ctx.expr(0));
+		Value vright = visit(ctx.expr(1));
+		Value val = null;
+		try {
+			LesserThanEqualToExpression lrtEq = new LesserThanEqualToExpression(
+					mCFG, (IExpression) vleft.get(),
+					(IExpression) vright.get());
+			val = new Value(lrtEq);
+		} catch (Exception e) {
+			logger.severe("Lesser than or equal: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitOrExp(CymbolParser.OrExpContext ctx) { 
-                logger.finest("DEBUG: Or EXP: " + ctx.expr(0).getText() + " || " + ctx.expr(1).getText());
-                Value vleft = visit(ctx.expr(0));
-                Value vright = visit(ctx.expr(1));
-                Value val = null;
-                try {
-                        OrExpression orExp = new OrExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-						//logger.finest("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
-                        val = new Value(orExp);
-                } catch (Exception e) {
-                        logger.severe("Exception Or: " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr '||' expr
+	 * 
+	 * Caveat: Or exps must be parenthesized.
+	 * TODO : Fix the caveat.
+	 */
+	@Override
+	public Value visitOrExp(CymbolParser.OrExpContext ctx) {
+		logger.finest("Or exp");
+		Value vleft = visit(ctx.expr(0).getChild(1));
+		Value vright = visit(ctx.expr(1).getChild(1));
+		Value val = null;
+		try {
+			OrExpression orExp = new OrExpression(mCFG,
+					(IExpression) vleft.get(), (IExpression) vright.get());
+			val = new Value(orExp);
+		} catch (Exception e) {
+			logger.severe("Or exp: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitAndExp(CymbolParser.AndExpContext ctx) { 
-                logger.finest("DEBUG: AND EXP: " + ctx.expr(0).getText() + " && " + ctx.expr(1).getText());
-                Value vleft = visit(ctx.expr(0).getChild(1));
-                Value vright = visit(ctx.expr(1).getChild(1));
-                Value val = null;
-				logger.finest("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
-                try {
-                        AndExpression andExp = new AndExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-                        val = new Value(andExp);
-                } catch (Exception e) {
-                        logger.severe("Exception AND: " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr '&&' expr
+	 * 
+	 * Caveat: And exps must be parenthesized.
+	 * TODO : Fix the caveat.
+	 */
+	@Override
+	public Value visitAndExp(CymbolParser.AndExpContext ctx) {
+		logger.finest("And Exp");
+		Value vleft = visit(ctx.expr(0).getChild(1));
+		Value vright = visit(ctx.expr(1).getChild(1));
+		Value val = null;
+		try {
+			AndExpression andExp = new AndExpression(mCFG,
+					(IExpression) vleft.get(), (IExpression) vright.get());
+			val = new Value(andExp);
+		} catch (Exception e) {
+			logger.severe("And Exp: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitMult(CymbolParser.MultContext ctx) { 
-                logger.finest("DEBUG: MULT");
-                Value vleft = visit(ctx.expr(0));
-                Value vright = visit(ctx.expr(1));
-                Value val = null;
-                try {
-                        MulExpression exp = new MulExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-                        val = new Value(exp);
-                } catch (Exception e){
-                        logger.severe("MULT:" + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr '*' expr
+	 */
+	@Override
+	public Value visitMult(CymbolParser.MultContext ctx) {
+		logger.finest("Mult exp");
+		Value vleft = visit(ctx.expr(0));
+		Value vright = visit(ctx.expr(1));
+		Value val = null;
+		try {
+			MulExpression exp = new MulExpression(mCFG,
+					(IExpression) vleft.get(), (IExpression) vright.get());
+			val = new Value(exp);
+		} catch (Exception e) {
+			logger.severe("Mult exp: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitAddSub(CymbolParser.AddSubContext ctx) { 
-                logger.finest("DEBUG: ADDSUB");
-                Value vleft = visit(ctx.expr(0));
-                Value vright = visit(ctx.expr(1));
-                Value val = null;
-                try {
-                			Expression exp;
-                		    if (ctx.getChild(1).getText().equals("-"))
-							exp = new SubExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-                		    else 
-							exp = new AddExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-                        val = new Value(exp);
-                } catch (Exception e){
-                        logger.severe("ADDSUB:" + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr ('+' | '-') expr
+	 */
+	@Override
+	public Value visitAddSub(CymbolParser.AddSubContext ctx) {
+		logger.finest("Add/Sub exp");
+		Value vleft = visit(ctx.expr(0));
+		Value vright = visit(ctx.expr(1));
+		Value val = null;
+		try {
+			Expression exp;
+			if (ctx.getChild(1).getText().equals("-")) {
+				exp = new SubExpression(mCFG, (IExpression) vleft.get(),
+						(IExpression) vright.get());
+			} else {
+				exp = new AddExpression(mCFG, (IExpression) vleft.get(),
+						(IExpression) vright.get());
+			}
+			val = new Value(exp);
+		} catch (Exception e) {
+			logger.severe("Add/Sub exp:" + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitEqual(CymbolParser.EqualContext ctx) { 
-                logger.finest("DEBUG: EQUAL");
-                Value val = null;
-                Value vleft = visit(ctx.expr(0));
-                Value vright = visit(ctx.expr(1));
-                try {
-                        EqualsExpression exp = new EqualsExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-                        val = new Value(exp);
-                } catch (Exception e) {
-                        logger.severe("EQUAL " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * expr '==' expr
+	 */
+	@Override
+	public Value visitEqual(CymbolParser.EqualContext ctx) {
+		logger.finest("Equals exp");
+		Value val = null;
+		Value vleft = visit(ctx.expr(0));
+		Value vright = visit(ctx.expr(1));
+		try {
+			EqualsExpression exp = new EqualsExpression(mCFG,
+					(IExpression) vleft.get(), (IExpression) vright.get());
+			val = new Value(exp);
+		} catch (Exception e) {
+			logger.severe("Equals exp: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitVar(CymbolParser.VarContext ctx) { 
-                logger.finest("DEUBG: VAR:- " + ctx.ID().getText());
-                Value val = null;
-                try {
-                        Variable var = new Variable(ctx.ID().getText(), mCFG);
-                        val = new Value(var);
-                } catch (Exception e) {
-                        logger.severe("VAR:" + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * ID
+	 */
+	@Override
+	public Value visitVar(CymbolParser.VarContext ctx) {
+		logger.finest("varName: " + ctx.ID().getText());
+		Value val = null;
+		try {
+			Variable var = new Variable(ctx.ID().getText(), mCFG);
+			val = new Value(var);
+		} catch (Exception e) {
+			logger.severe("Var exp:" + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitParens(CymbolParser.ParensContext ctx) { 
-                
-                logger.finest("DEBUG: Parens STUB ");
-//                return visitChildren(ctx.expr()); 
-                return visitChildren(ctx.expr()); 
-        }
+	/*
+	 * @Override
+	 * public Value visitParens(CymbolParser.ParensContext ctx) {
+	 * return visitChildren(ctx.expr());
+	 * }
+	 */
 
-        @Override 
-        public Value visitInt(CymbolParser.IntContext ctx) { 
-                
-                 logger.finest("DEBUG: INT="+ ctx.getText());
-                 
-                Value val = null; 
-                try {
-                        Integer intVal = Integer.parseInt(ctx.INT().getText());
-                        if (ctx.MINUS() != null)
-                        		intVal = intVal * -1;
-                        ConcreteConstant constant = new ConcreteConstant(intVal, mCFG);
-                        val = new Value(constant);
-                } catch (Exception e) {
-                        logger.severe("visitInt:"+e);
-                }
-                return val;
-        }
+	@Override
+	public Value visitInt(CymbolParser.IntContext ctx) {
+		logger.finest("Int: " + ctx.getText());
+		Value val = null;
+		try {
+			Integer intVal = Integer.parseInt(ctx.INT().getText());
+			if (ctx.MINUS() != null)
+				intVal = intVal * -1;
+			ConcreteConstant constant = new ConcreteConstant(intVal, mCFG);
+			val = new Value(constant);
+		} catch (Exception e) {
+			logger.severe("Int: " + e);
+		}
+		return val;
+	}
 
-        @Override 
-        public Value visitInput(CymbolParser.InputContext ctx) { 
-                logger.finest("DEBUG: INPUT");
-                Value val = null;
-                try {
-                        Input inp = new Input(mCFG);
-                        val = new Value(inp);
-                } catch (Exception e) {
-                        logger.severe("INPUT " + e);
-                }
-                return val;
-        }
+	/**
+	 * Grammar rule:
+	 * 'input()'
+	 */
+	@Override
+	public Value visitInput(CymbolParser.InputContext ctx) {
+		logger.finest("Input");
+		Value val = null;
+		try {
+			Input inp = new Input(mCFG);
+			val = new Value(inp);
+		} catch (Exception e) {
+			logger.severe("Input: " + e);
+		}
+		return val;
+	}
 }
-
