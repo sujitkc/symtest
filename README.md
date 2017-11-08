@@ -9,7 +9,7 @@ SymTest is a test generation tool using symbolic testing and graph algorithms to
 # Setting up the project
 
 
-##### Download the [project as zip](https://github.com/sujitkc/symtest/archive/hotfix.zip) from the Github page and import it into eclipse.
+##### Download the [project as zip](https://github.com/sujitkc/symtest/archive/devel.zip) from the Github page and import it into eclipse.
 
 ## Installing dependencies
 
