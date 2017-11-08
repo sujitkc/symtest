@@ -98,6 +98,7 @@ Session.vim
 tags
 
 .DS_STORE
+.png
 # End of https://www.gitignore.io/api/vim,java,eclipse
 /bin1/
 /bin/

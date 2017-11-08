@@ -2,7 +2,7 @@ void main() {
 	int x = 5;
 	while(1) {
 		int v1 = scanf();
-		int v2 = scanf()
+		int v2 = scanf();
 		if ((v1 > 15) && (v2 < 20)) {
 			v1 = 10 + 20;
 		} else {

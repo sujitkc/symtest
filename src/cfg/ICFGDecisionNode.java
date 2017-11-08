@@ -14,7 +14,4 @@ public interface ICFGDecisionNode extends ICFGNode, IDecisionNode {
 	public ICFEdge setElseEdge(ICFEdge edge);
 	public ICFEdge deleteThenEdge();
 	public ICFEdge deleteElseEdge();
-	//EXTRA
-	public ICFGNode setEndIfNode(ICFGNode node);
-	public ICFGNode getEndIfNode();
 }
