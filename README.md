@@ -49,8 +49,8 @@ SimpleInput.cymbol
 void main() {
 	int x = 5;
 	while(1) {
-		int v1 = scanf();
-		int v2 = scanf()
+		int v1 = input();
+		int v2 = input();
 		if ((v1 > 15) && (v2 < 20)) {
 			v1 = 10 + 20;
 		} else {
@@ -66,7 +66,7 @@ SampleInput.cymbol.target
 ```
 
 ### Output
-![CFG Visualization](resources/cfg.png)
+![CFG Visualization](resources/simpleInput_cfg.png)
 ```
 
 ...
