@@ -5,7 +5,7 @@ file    :   (functionDecl | varDecl)+;
 varDecl :   type ID ('=' expr)? ';'
         ;
 
-type    :   'float' | 'int' | 'void';
+type    :   'boolean' | 'int' | 'void';
 
 functionDecl
     :       type ID '('(formalParameters)?')' block
@@ -35,7 +35,7 @@ stat    :   block                           #StatBlock
         ;
 
 expr    :   ID '(' exprList? ')'            #Call
-        |   'scanf()'                       #Input
+        |   'input()'                       #Input
         |   expr '[' expr ']'               #Index
         |   '!' expr                        #Not
         |   expr '*' expr                   #Mult

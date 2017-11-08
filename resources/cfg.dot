@@ -1,1 +1,1 @@
-digraph G {BEGIN->BB1;BB1->BB2;WHILE->BB2;BB2->D3;D3->BB4[color=red, pendwidth=3.0];D3->BB5[color=red, pendwidth=3.0];BB4->BB6;BB5->BB6;BB6->WHILE;}
+digraph G {BEGIN->BB1;BB1->BB2;WHILE->BB2;BB2->D3;D3->BB4;BB4->D5;D5->BB6;BB6->BB7;D5->BB7;BB7->D8;D8->BB9[color=red, pendwidth=3.0];D8->BB10;BB9->BB11;BB10->BB11;BB11->BB12;D3->BB12;BB12->WHILE;}

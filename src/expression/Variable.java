@@ -1,7 +1,6 @@
 package expression;
 
 import program.IProgram;
-import java.util.Objects;
 import visitors.IExprVisitor;
 
 public class Variable extends Expression implements IIdentifier {

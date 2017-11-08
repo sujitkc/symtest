@@ -11,7 +11,7 @@ void main() {
 		prev_out = 0;
 		out = 0;
 		while (1) {
-			start = scanf();
+			start = input();
 			if (prev_start - start == -1) {
 				x5 = 1;
 			} else {

@@ -2,7 +2,7 @@ void main() {
         int start = -1;
         int var;
         while (1) {
-        	  var = scanf();
+        	  var = input();
         	  if (var > 0) {
         	  	start = 20;
         	  } else {

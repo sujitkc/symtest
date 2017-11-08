@@ -1,7 +1,5 @@
 package frontend;
 
-import expression.IExpression;
-
 public class Value {
 
     public static Value VOID = new Value(new Object());

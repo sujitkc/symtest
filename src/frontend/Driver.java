@@ -10,8 +10,8 @@ public class Driver {
                 String inputFile = null;
                 InputStream is = System.in;
 //                inputFile = "/Users/athul/src/SKC/symtest/src/testcases/Timer.cymbol";
-//                inputFile = "/Users/athul/src/SKC/symtest/src/testcases/Timer2.cymbol";
-                inputFile = "/Users/athul/src/SKC/symtest/src/testcases/SimpleInput.cymbol";
+                inputFile = "/Users/athul/src/SKC/symtest/src/testcases/Temp.cymbol";
+//                inputFile = "/Users/athul/src/SKC/symtest/src/testcases/SimpleInput.cymbol";
                 if ( inputFile!=null ) is = new FileInputStream(inputFile);
                 ANTLRInputStream input = new ANTLRInputStream(is);
                 CymbolLexer lexer = new CymbolLexer(input); 
