@@ -116,6 +116,7 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
 		mCreator.linkLastNode();
 
 		// TODO Add more documentation about what's going on here.
+		// TODO Move this out of here into Driver
 		SymTest st = new SymTest(mCFG, mCreator.targets);
 		TestSequence seq = st.generateTestSequence();
 		Map<IIdentifier, List<Object>> testseq = seq.getTestSequence();

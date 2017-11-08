@@ -1,23 +1,29 @@
 package frontend;
 
+/**
+ * Uses GraphViz to create the CFG diagram. All the edges in the CFG created in
+ * the code is labeled as L1->L2 to make it easier to generate the DOT code.
+ * 
+ */
+
 import java.io.File;
 import java.io.PrintWriter;
 
 public class CFGVisualizer {
-	
-	//TODO Place into central config file
+
+	// TODO Place into central config file
 	private String DOT_PATH = "/usr/local/bin/dot";
 	private String DOT_OPTIONS = "-Tpng -oresources/cfg.png";
+
 	private String inputFile = "resources/cfg.dot";
-	private String command = DOT_PATH + " " + DOT_OPTIONS + " " 
-			+ inputFile;
+	private String command = DOT_PATH + " " + DOT_OPTIONS + " " + inputFile;
+
 	private StringBuilder dotContent = new StringBuilder();
-	
+
 	public CFGVisualizer() {
 		dotContent.append("digraph G {");
-		
 	}
-	
+
 	public void addLink(String link, boolean isTarget) {
 		dotContent.append(link);
 		if (isTarget)
@@ -25,7 +31,7 @@ public class CFGVisualizer {
 		else
 			dotContent.append(";");
 	}
-	
+
 	public void execute() {
 		try {
 			dotContent.append("}");
@@ -37,6 +43,5 @@ public class CFGVisualizer {
 			e.printStackTrace();
 		}
 	}
-
 
 }
