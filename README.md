@@ -19,7 +19,7 @@ SymTest is a test generation tool using symbolic testing and graph algorithms to
 * Install the eclipse plugin [antlr4ide.](https://github.com/antlr4ide/antlr4ide#eclipse-installation)
 * `Right click on your project -> Properties -> ANTLR4 -> Tool` and make sure `Generate parse tree listener` is unchecked and `Generate parse tree visitors` is checked. Also make sure Antlr4.7 (or higher) JAR is selected in the distributions menu.
 * Install the [Yices2 Solver](http://yices.csl.sri.com/) for your platform.
-
+* Install [GraphViz](http://www.graphviz.org/Download.php) for CFG Visualization.
 
 ## Running the project
 
@@ -66,6 +66,7 @@ SampleInput.cymbol.target
 ```
 
 ### Output
+![CFG Visualization](resources/cfg.png)
 ```
 
 ...
@@ -93,4 +94,5 @@ variable 'v2' = {19, 0, X }
 * [JUnit](https://github.com/junit-team/junit4/wiki/Download-and-Install)
 * [Yices SMT Solver](http://yices.csl.sri.com/)
 * [ANTLR](http://www.antlr.org/)
+* [GraphViz](www.graphviz.org)
 
