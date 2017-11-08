@@ -3,10 +3,6 @@ package frontend;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
-import java.util.UUID;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cfg.ICFEdge;
@@ -127,7 +123,7 @@ class CFGCreator {
 
 			if (isTarget) {
 				targets.add(decisionThenEdge);
-				logger.fine("Added edge to target set: " + decisionThenEdge.getId());
+				logger.info("Added edge to target set: " + decisionThenEdge.getId());
 			}
 		} catch (Exception e) {
 			System.out.println(e);
@@ -151,7 +147,7 @@ class CFGCreator {
 			visualizer.addLink(decisionElseEdge.getId(), isTarget);
 			if (isTarget) {
 				targets.add(decisionElseEdge);
-				logger.fine("Added edge to target set: " + decisionElseEdge.getId());
+				logger.info("Added edge to target set: " + decisionElseEdge.getId());
 			}
 		} catch (Exception e) {
 			System.out.println(e);

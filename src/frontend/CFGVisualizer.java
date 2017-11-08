@@ -32,9 +32,7 @@ public class CFGVisualizer {
 			PrintWriter writer = new PrintWriter(new File(inputFile));
 			writer.write(dotContent.toString());
 			writer.close();
-			System.out.println("EXECUTED");
 			Process p = Runtime.getRuntime().exec(command);
-			System.out.println("@@@@ EXECUTED");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -6,11 +6,11 @@ import java.io.FileReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import cfg.ICFG;
 import expression.AddExpression;
 import expression.AndExpression;
-import expression.SubExpression;
 import expression.ConcreteConstant;
 import expression.EqualsExpression;
 import expression.Expression;
@@ -24,6 +24,7 @@ import expression.LesserThanExpression;
 import expression.MulExpression;
 import expression.NotExpression;
 import expression.OrExpression;
+import expression.SubExpression;
 import expression.Variable;
 import statement.IStatement;
 import statement.Statement;
@@ -36,6 +37,9 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
         private ICFG mCFG;
         private CFGCreator mCreator;
         private HashMap<Integer, String> targetMap;
+        
+        private static final Logger logger = 
+			Logger.getLogger(CFGVisitor.class.getName());
 
         public CFGVisitor(String targetFileName) {
                 targetMap = new HashMap<Integer, String>();
@@ -43,18 +47,17 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                 try {
                         BufferedReader br = new BufferedReader(new FileReader(targetFile));
                         String line;
-                        System.out.println("DEBUG: Target Mapping");
+                        logger.info("Target Mapping:");
                         while ((line = br.readLine()) != null) {
                                 String[] parts = line.trim().split("-");
                                 targetMap.put(Integer.parseInt(parts[0]), parts[1]);
-                                System.out.println("Line " + parts[0] + " " + parts[1]);
+                                logger.info("Line " + parts[0] + " " + parts[1]);
                         }
+                        br.close();
                 } catch (Exception e) {
-                        System.out.println(e);
+                        logger.severe(e.toString());
                 }
-                System.out.println();
         }
-
 
         @Override 
         public Value visitFile(CymbolParser.FileContext ctx) { 
@@ -62,38 +65,37 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                 mCFG = mCreator.getCFG();
                 visitChildren(ctx); 
                 mCreator.linkLastNode();
-                System.out.println("------------------------------------------------------------");
+                logger.finest(" ");
 
 				SymTest st = new SymTest(mCFG, mCreator.targets);
 				TestSequence seq = st.generateTestSequence();
-				System.out.println(seq);
 				Map<IIdentifier, List<Object>> testseq = seq.getTestSequence();
-				System.out.println(testseq);
+				System.out.println("Test Seq: " + testseq);
 
                 return null;
         }
 
         @Override 
         public Value visitVarDecl(CymbolParser.VarDeclContext ctx) { 
-                System.out.print("DEBUG: VarDECL:- TYPE:" + ctx.type().getText() + " VAR:" + ctx.ID().getText());
+                logger.finest("DEBUG: VarDECL:- TYPE:" + ctx.type().getText() + " VAR:" + ctx.ID().getText());
 
                 Value val = null;
                 try {
                         Variable var = new Variable(ctx.ID().getText(), mCFG);
                         if (ctx.expr() != null) {
-                                System.out.println(" EXPR: " +ctx.expr().getText());
+                                logger.finest(" EXPR: " +ctx.expr().getText());
                                 Value expr = visit(ctx.expr());
                                 Statement stmnt = new Statement(mCFG, var, (IExpression)expr.get());
                                 mCreator.addStatement(stmnt);
                                 val = new Value(stmnt);
                         } else {
                                 Statement stmnt = new Statement(mCFG, var, new ConcreteConstant(0, mCFG));
-                                System.out.println(" ");
+                                logger.finest(" ");
                                 mCreator.addStatement(stmnt);
                                 val = new Value(stmnt);
                         }
                 } catch (Exception e) {
-                        System.out.println("VarDECL:" + e);
+                        logger.severe("VarDECL:" + e);
                 }
                 return val;
         }
@@ -101,7 +103,7 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
         @Override 
         public Value visitBlock(CymbolParser.BlockContext ctx) { 
                 /*
-                 *System.out.println("DEBUG: BLOCK Child Count:" + ctx.getChildCount());
+                 *logger.finest("DEBUG: BLOCK Child Count:" + ctx.getChildCount());
                  */
                 return visitChildren(ctx); 
         }
@@ -109,14 +111,14 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
         @Override 
         public Value visitStatBlock(CymbolParser.StatBlockContext ctx) { 
                 /*
-                 *System.out.println("DEBUG: STATEMENT BLOCK");
+                 *logger.finest("DEBUG: STATEMENT BLOCK");
                  */
                 return visitChildren(ctx); 
         }
 
         @Override 
         public Value visitWhile(CymbolParser.WhileContext ctx) { 
-                System.out.println("DEBUG: WHILE");
+                logger.finest("DEBUG: WHILE");
                 mCreator.addWhile();
                 visit(ctx.stat());
                 return null;
@@ -139,11 +141,11 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                         }
                 }
 
-                System.out.println("DEBUG: (" + lineNo + ") IF");
+                logger.finest("DEBUG: (" + lineNo + ") IF");
 
-                //System.out.println("DEBUG: IF COND text: " + ctx.expr().getText());
-                //System.out.println("DEBUG: 0 " + ctx.expr().getChildCount());
-                //System.out.println("DEBUG: 1 " + ctx.expr().getChild(0).getText());
+                //logger.finest("DEBUG: IF COND text: " + ctx.expr().getText());
+                //logger.finest("DEBUG: 0 " + ctx.expr().getChildCount());
+                //logger.finest("DEBUG: 1 " + ctx.expr().getChild(0).getText());
                 Value vexp = visit(ctx.expr());
                 mCreator.addConditional((IExpression) vexp.get(), isTargetIf);
                 //mCreator.setThenBlock();
@@ -159,7 +161,7 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
 
         @Override 
         public Value visitAssign(CymbolParser.AssignContext ctx) { 
-                System.out.println("DEBUG: ASSIGN ");
+                logger.finest("DEBUG: ASSIGN ");
                 Value vleft = visit(ctx.expr(0));
                 Value vright = visit(ctx.expr(1));
                 Value val = null;
@@ -168,14 +170,14 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                         mCreator.addStatement(assign);
                         val = new Value(assign);
                 } catch (Exception e) {
-                        System.out.println("ASSIGN: " + e);
+                        logger.severe("ASSIGN: " + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitExp(CymbolParser.ExpContext ctx) { 
-                System.out.println("DEBUG: EXP");
+                logger.finest("DEBUG: EXP");
                 Value vexp = visit(ctx.expr());
                 mCreator.addStatement((IStatement)vexp);
                 return vexp;
@@ -183,21 +185,21 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
 
         @Override 
         public Value visitNot(CymbolParser.NotContext ctx) { 
-                System.out.println("DEBUG: NOT EXP");
+                logger.finest("DEBUG: NOT EXP");
                 Value exp = visit(ctx.expr());
                 Value val = null;
                 try {
                         NotExpression nexp = new NotExpression(mCFG, (IExpression)exp.get());
                         val = new Value(nexp);
                 } catch (Exception e) {
-                        System.out.println("NOT: " + e);
+                        logger.severe("NOT: " + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitNotEqual(CymbolParser.NotEqualContext ctx) { 
-                System.out.println("DEBUG: NOT EQUALS EXP: " + ctx.expr(0).getText() + " NOT EQUALS? " + ctx.expr(1).getText());
+                logger.finest("DEBUG: NOT EQUALS EXP: " + ctx.expr(0).getText() + " NOT EQUALS? " + ctx.expr(1).getText());
                 Value vleft = visit(ctx.expr(0));
                 Value vright = visit(ctx.expr(1));
                 Value val = null;
@@ -206,30 +208,30 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                         NotExpression neql = new NotExpression(mCFG, eql);
                         val = new Value(neql);
                 } catch (Exception e) {
-                        System.out.println("EQUALS: " + e);
+                        logger.severe("EQUALS: " + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitGreaterThan(CymbolParser.GreaterThanContext ctx) { 
-                System.out.println("DEBUG: GREATER THAN EXP: " + ctx.expr(0).getText() + " GREATER THAN " + ctx.expr(1).getText());
+                logger.finest("DEBUG: GREATER THAN EXP: " + ctx.expr(0).getText() + " GREATER THAN " + ctx.expr(1).getText());
                 Value vleft = visit(ctx.expr(0));
                 Value vright = visit(ctx.expr(1));
                 Value val = null;
                 try {
                         GreaterThanExpression grt = new GreaterThanExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-						//System.out.println("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
+						//logger.finest("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
                         val = new Value(grt);
                 } catch (Exception e) {
-                        System.out.println("Exception GREATER THAN: " + e);
+                        logger.severe("Exception GREATER THAN: " + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitGreaterThanEqual(CymbolParser.GreaterThanEqualContext ctx) { 
-                System.out.println("DEBUG: GREATER THAN EQUAL EXP: " + ctx.expr(0).getText() + " GREATER THAN EQUALS " + ctx.expr(1).getText());
+                logger.finest("DEBUG: GREATER THAN EQUAL EXP: " + ctx.expr(0).getText() + " GREATER THAN EQUALS " + ctx.expr(1).getText());
                 Value vleft = visit(ctx.expr(0));
                 Value vright = visit(ctx.expr(1));
                 Value val = null;
@@ -237,14 +239,14 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                         GreaterThanEqualToExpression grtEq = new GreaterThanEqualToExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
                         val = new Value(grtEq);
                 } catch (Exception e) {
-                        System.out.println("GREATER THAN EQ: " + e);
+                        logger.severe("GREATER THAN EQ: " + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitLessThan(CymbolParser.LessThanContext ctx) { 
-                System.out.println("DEBUG: LESSER THAN EXP: " + ctx.expr(0).getText() + " LESSER THAN " + ctx.expr(1).getText());
+                logger.finest("DEBUG: LESSER THAN EXP: " + ctx.expr(0).getText() + " LESSER THAN " + ctx.expr(1).getText());
                 Value vleft = visit(ctx.expr(0));
                 Value vright = visit(ctx.expr(1));
                 Value val = null;
@@ -252,14 +254,14 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                         LesserThanExpression lrt = new LesserThanExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
                         val = new Value(lrt);
                 } catch (Exception e) {
-                        System.out.println("LESSER THAN: " + e);
+                        logger.severe("LESSER THAN: " + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitLessThanEqual(CymbolParser.LessThanEqualContext ctx) { 
-                System.out.println("DEBUG: LESSER THAN EQUAL EXP: " + ctx.expr(0).getText() + " LESSER THAN EQUALS " + ctx.expr(1).getText());
+                logger.finest("DEBUG: LESSER THAN EQUAL EXP: " + ctx.expr(0).getText() + " LESSER THAN EQUALS " + ctx.expr(1).getText());
                 Value vleft = visit(ctx.expr(0));
                 Value vright = visit(ctx.expr(1));
                 Value val = null;
@@ -267,46 +269,46 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                         LesserThanEqualToExpression lrtEq = new LesserThanEqualToExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
                         val = new Value(lrtEq);
                 } catch (Exception e) {
-                        System.out.println("LESSER THAN EQ: " + e);
+                        logger.severe("LESSER THAN EQ: " + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitOrExp(CymbolParser.OrExpContext ctx) { 
-                System.out.println("DEBUG: Or EXP: " + ctx.expr(0).getText() + " || " + ctx.expr(1).getText());
+                logger.finest("DEBUG: Or EXP: " + ctx.expr(0).getText() + " || " + ctx.expr(1).getText());
                 Value vleft = visit(ctx.expr(0));
                 Value vright = visit(ctx.expr(1));
                 Value val = null;
                 try {
                         OrExpression orExp = new OrExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
-						//System.out.println("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
+						//logger.finest("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
                         val = new Value(orExp);
                 } catch (Exception e) {
-                        System.out.println("Exception Or: " + e);
+                        logger.severe("Exception Or: " + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitAndExp(CymbolParser.AndExpContext ctx) { 
-                System.out.println("DEBUG: AND EXP: " + ctx.expr(0).getText() + " && " + ctx.expr(1).getText());
+                logger.finest("DEBUG: AND EXP: " + ctx.expr(0).getText() + " && " + ctx.expr(1).getText());
                 Value vleft = visit(ctx.expr(0).getChild(1));
                 Value vright = visit(ctx.expr(1).getChild(1));
                 Value val = null;
-				System.out.println("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
+				logger.finest("DEBUG: LType - " + ((IExpression)vleft.get()).getType() + "RType - " + ((IExpression)vright.get()).getType());
                 try {
                         AndExpression andExp = new AndExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
                         val = new Value(andExp);
                 } catch (Exception e) {
-                        System.out.println("Exception AND: " + e);
+                        logger.severe("Exception AND: " + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitMult(CymbolParser.MultContext ctx) { 
-                System.out.println("DEBUG: MULT");
+                logger.finest("DEBUG: MULT");
                 Value vleft = visit(ctx.expr(0));
                 Value vright = visit(ctx.expr(1));
                 Value val = null;
@@ -314,14 +316,14 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                         MulExpression exp = new MulExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
                         val = new Value(exp);
                 } catch (Exception e){
-                        System.out.println("MULT:" + e);
+                        logger.severe("MULT:" + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitAddSub(CymbolParser.AddSubContext ctx) { 
-                System.out.println("DEBUG: ADDSUB");
+                logger.finest("DEBUG: ADDSUB");
                 Value vleft = visit(ctx.expr(0));
                 Value vright = visit(ctx.expr(1));
                 Value val = null;
@@ -333,14 +335,14 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
 							exp = new AddExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
                         val = new Value(exp);
                 } catch (Exception e){
-                        System.out.println("ADDSUB:" + e);
+                        logger.severe("ADDSUB:" + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitEqual(CymbolParser.EqualContext ctx) { 
-                System.out.println("DEBUG: EQUAL");
+                logger.finest("DEBUG: EQUAL");
                 Value val = null;
                 Value vleft = visit(ctx.expr(0));
                 Value vright = visit(ctx.expr(1));
@@ -348,20 +350,20 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                         EqualsExpression exp = new EqualsExpression(mCFG, (IExpression)vleft.get(), (IExpression)vright.get());
                         val = new Value(exp);
                 } catch (Exception e) {
-                        System.out.println("EQUAL " + e);
+                        logger.severe("EQUAL " + e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitVar(CymbolParser.VarContext ctx) { 
-                System.out.println("DEUBG: VAR:- " + ctx.ID().getText());
+                logger.finest("DEUBG: VAR:- " + ctx.ID().getText());
                 Value val = null;
                 try {
                         Variable var = new Variable(ctx.ID().getText(), mCFG);
                         val = new Value(var);
                 } catch (Exception e) {
-                        System.out.println("VAR:" + e);
+                        logger.severe("VAR:" + e);
                 }
                 return val;
         }
@@ -369,7 +371,7 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
         @Override 
         public Value visitParens(CymbolParser.ParensContext ctx) { 
                 
-                System.out.println("DEBUG: Parens STUB ");
+                logger.finest("DEBUG: Parens STUB ");
 //                return visitChildren(ctx.expr()); 
                 return visitChildren(ctx.expr()); 
         }
@@ -377,7 +379,7 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
         @Override 
         public Value visitInt(CymbolParser.IntContext ctx) { 
                 
-                 System.out.println("DEBUG: INT="+ ctx.getText());
+                 logger.finest("DEBUG: INT="+ ctx.getText());
                  
                 Value val = null; 
                 try {
@@ -387,20 +389,20 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
                         ConcreteConstant constant = new ConcreteConstant(intVal, mCFG);
                         val = new Value(constant);
                 } catch (Exception e) {
-                        System.out.println("visitInt:"+e);
+                        logger.severe("visitInt:"+e);
                 }
                 return val;
         }
 
         @Override 
         public Value visitInput(CymbolParser.InputContext ctx) { 
-                System.out.println("DEBUG: INPUT");
+                logger.finest("DEBUG: INPUT");
                 Value val = null;
                 try {
                         Input inp = new Input(mCFG);
                         val = new Value(inp);
                 } catch (Exception e) {
-                        System.out.println("INPUT " + e);
+                        logger.severe("INPUT " + e);
                 }
                 return val;
         }
