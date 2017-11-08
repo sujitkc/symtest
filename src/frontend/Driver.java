@@ -9,9 +9,9 @@ public class Driver {
         public static void main(String[] args) throws Exception {
                 String inputFile = null;
                 InputStream is = System.in;
-                inputFile = "/Users/athul/src/SKC/symtest/src/testcases/Timer.cymbol";
+//                inputFile = "/Users/athul/src/SKC/symtest/src/testcases/Timer.cymbol";
 //                inputFile = "/Users/athul/src/SKC/symtest/src/testcases/Timer2.cymbol";
-//                inputFile = "/Users/athul/src/SKC/symtest/src/testcases/NestedIf.cymbol";
+                inputFile = "/Users/athul/src/SKC/symtest/src/testcases/SimpleInput.cymbol";
                 if ( inputFile!=null ) is = new FileInputStream(inputFile);
                 ANTLRInputStream input = new ANTLRInputStream(is);
                 CymbolLexer lexer = new CymbolLexer(input); 

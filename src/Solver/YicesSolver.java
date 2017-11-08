@@ -21,6 +21,7 @@ public class YicesSolver implements ISolver {
 
 	IExpression mExpression;
 	Set<IIdentifier> mVariables;
+	private String YICES_PATH = "/usr/local/bin/yices";
 
 	public YicesSolver(Set<IIdentifier> symVars, IExpression exp) {
 		this.mVariables = symVars;
@@ -31,7 +32,6 @@ public class YicesSolver implements ISolver {
 		String yicesInput = YicesSolver.makeYicesInput(this.mVariables,
 				this.mExpression);
 
-		// System.out.println("/home/sujit/My-Download/yices-2.2.2/bin/yices input :\n" + yicesInput);
 
 		FileWriter outFile;
 
@@ -39,7 +39,7 @@ public class YicesSolver implements ISolver {
 		PrintWriter out = new PrintWriter(outFile);
 		out.println(yicesInput);
 		out.close();
-		String command = "/usr/local/bin/yices resources/input.ys";
+		String command = YICES_PATH + " resources/input.ys";
 		String output = YicesSolver.cmdExec(command);
 		// System.out.println("yices output :\n" + output);
 
