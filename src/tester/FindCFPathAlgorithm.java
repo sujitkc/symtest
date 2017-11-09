@@ -1,15 +1,16 @@
 package tester;
 
+import graph.IEdge;
+import graph.IGraph;
+import graph.INode;
+import graph.IPath;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import graph.IEdge;
-import graph.IGraph;
-import graph.INode;
-import graph.IPath;
 import mygraph.Path;
 
 public class FindCFPathAlgorithm {
@@ -63,7 +64,8 @@ public class FindCFPathAlgorithm {
 		IPath head = this.findPathToLoopStartNode(this.mGraph.getRoot());
 		path.concatenate(head);
 		
-		System.out.println("FindCFPath Initialized - path = " + path);
+		System.out.println("FindCFPathAlgorihtm initialized");
+		System.out.println("path to loop start: " + path);
 
 	}
 	
@@ -93,15 +95,9 @@ public class FindCFPathAlgorithm {
 						+ "outgoing edges.");
 			}
 			IEdge nextEdge = nextEdges.get(0);
-//       	FIX
-//       	EXTRA : causes x->start_node to be appended twice, once here and the other one in findCFPath.
-//       	Remove the last edge from head.
-			if (nextEdge.getHead() != this.mLoopStartNode) {
-				path.concatenate(nextEdge);
-				path.concatenate(findPathToLoopStartNode(nextEdge.getHead()));
-			}
+			path.concatenate(nextEdge);
+			path.concatenate(findPathToLoopStartNode(nextEdge.getHead()));
 		}
-
 		return path;
 	}
 	
@@ -157,19 +153,17 @@ public class FindCFPathAlgorithm {
 	}
 	
 	public IPath findCFPath(INode startNode, Set<IEdge> targets) throws Exception {
+		System.out.println("findCFPath called with start: " + startNode.getId() 
+						  + " & path: " + path + " & targets: " + targets);
 		
 		Set<IEdge> currentTargets = new HashSet<IEdge>();
 		for(IEdge e : targets) {
 			currentTargets.add(e);
 		}
-		//EXTRA?
-		path = new Path(this.mGraph);
+		IPath path2 = new Path(this.mGraph);
 		while(!currentTargets.isEmpty()) {
 			this.mTable = getEmptyTable();
 			IPath newAcyclicPath = findLongestAcyclicPath(startNode, currentTargets);
-			System.out.println("Start node: " + startNode.getId());
-			System.out.println("Acyclic path: " + newAcyclicPath);
-			System.out.println("Targets: " + targets);
 /*
 			// Adding the back edge.
 			List<IEdge> p = newAcyclicPath.getPath();
@@ -179,18 +173,17 @@ public class FindCFPathAlgorithm {
 */
 			
 			currentTargets = updateTargets(newAcyclicPath, currentTargets);
-			path.concatenate(newAcyclicPath);
-
+			path2.concatenate(newAcyclicPath);
 			List<IEdge> loopEdgeList = this.mTargetNode.getOutgoingEdgeList();
 			if(!loopEdgeList.isEmpty()) {
-				path.concatenate(this.mTargetNode.getOutgoingEdgeList().get(0));
+				path2.concatenate(this.mTargetNode.getOutgoingEdgeList().get(0));
 				startNode = this.mLoopStartNode;
 			}
 			if(mTargetNode.getOutgoingEdgeList().size() == 0) break;
-			System.out.println("Path: " + path);
 
 		}
-		return path;
+		System.out.println("findCFPath result path2 = " + path2);
+		return path2;
 	}
 	
 	private Set<IEdge> updateTargets(IPath newAcyclicPath, Set<IEdge> currentTargets) {

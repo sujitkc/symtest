@@ -19,7 +19,8 @@ public class Driver {
 	public static void main(String[] args) throws Exception {
 		String inputFile = null;
 		InputStream is = System.in;
-		inputFile = "/Users/athul/src/SKC/symtest/test_programs/SimpleInput.cymbol";
+//		inputFile = "/Users/athul/src/SKC/symtest/test_programs/Temp.cymbol";
+		inputFile = "/Users/athul/src/SKC/symtest/test_programs/Timer.cymbol";
 		if (inputFile != null)
 			is = new FileInputStream(inputFile);
 

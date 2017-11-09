@@ -1,0 +1,3 @@
+TODO Add instructions to set up logging with eclipse in README
+TODO Fix NoWhile B option
+TODO Move constants into central config class

@@ -11,8 +11,8 @@ int main()
 		if(temp<30)
 		{
 			temp = temp + val;
-		} 
-		if(temp>40)
+		}
+		if((temp>40) && (temp < 50))
 		{
 			temp = temp - val;
 		} else {

@@ -290,7 +290,7 @@ class CFGCreator {
 						decNode.getId() + "->" + mCurrBB.getId(), mCFG, decNode,
 						mCurrBB);
 				mCFG.addEdge(decEndEdge);
-				logger.finer("Add Dec-EndIf edge: " + decNode.getId()); // DOT
+				logger.finer("Add Dec-EndIf edge: " + decEndEdge.getId()); // DOT
 				visualizer.addLink(decEndEdge.getId(), false);
 			}
 		} catch (Exception e) {
