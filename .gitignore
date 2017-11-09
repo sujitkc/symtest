@@ -98,7 +98,9 @@ Session.vim
 tags
 
 .DS_STORE
-.png
+resources/cfg.png
+resources/cfg.dot
+resources/input.ys
 # End of https://www.gitignore.io/api/vim,java,eclipse
 /bin1/
 /bin/
