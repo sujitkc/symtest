@@ -1,0 +1,24 @@
+int main()
+{
+    int s1;
+    int s2;
+    int s3;
+    int i;
+    int result;
+    i = input();
+    while(1){
+		s1 = input();
+		s2 = input();
+		s3 = input();
+		if((s1==s2) && (s2==s3)) {
+			result = 1;
+		} else {
+			if((s1==s2) || ((s1==s3) || (s2==s3))) {
+				result = 2;
+			} else {
+				result = 3;
+			}
+		}
+	}
+	return 0;
+}

@@ -2,14 +2,12 @@
 
 SymTest is a test generation tool using symbolic testing and graph algorithms to generate efficient test sequences for embedded software systems.
 
-
 ### Reference:
 [Chakrabarti, Sujit, and S. Ramesh. "Symtest: A framework for symbolic testing of embedded software." Proceedings of the 9th India Software Engineering Conference. ACM, 2016](references/SymTest.pdf)
 
 # Setting up the project
 
-
-##### Download the [project as zip](https://github.com/sujitkc/symtest/archive/devel.zip) from the Github page and import it into eclipse.
+ Download the [project as zip](https://github.com/sujitkc/symtest/releases) from the Github release page and import it into eclipse.
 
 ## Installing dependencies
 
@@ -21,11 +19,16 @@ SymTest is a test generation tool using symbolic testing and graph algorithms to
 * Install the [Yices2 Solver](http://yices.csl.sri.com/) for your platform.
 * Install [GraphViz](http://www.graphviz.org/Download.php) for CFG Visualization.
 
+## Setting up the logger
+The project uses java.util.logger to provide debug information at varying granularity. The logging levels can be controlled by using `src/logging.properties` file. To tell the compiler to use the properties file, do the following:
+* `Run -> Run Configuration -> Arguments tab`
+* Paste the following into the `VM arguments:` box: `-Djava.util.logging.config.file=src/logging.properties`
+
 ## Running the project
 
-Set up the path to yices executable in `YICES_PATH` present in `src/Solver/YicesSolver.java`
+Set up the relevant path variables in `src/configuration/SymTestConfiguration.java`.
 
-All source programs are specified in a **C**-like language called [Cymbol](https://github.com/hqt/ANTLR-Project/blob/master/bin/com/cymbol/Cymbol.g4). The source programs are present in the `testcases` folder. The target edges for SymTest are specified using a combination of line number and one letter code as follow:
+All source programs are specified in a **C**-like language called [Cymbol](https://github.com/hqt/ANTLR-Project/blob/master/bin/com/cymbol/Cymbol.g4). The source programs are present in the `test_programs` folder. The target edges for SymTest are specified using a combination of line number and one letter code as follow:
 ```
 Format:
 <line# of if statement>-I/E/B
@@ -95,4 +98,3 @@ variable 'v2' = {19, 0, X }
 * [Yices SMT Solver](http://yices.csl.sri.com/)
 * [ANTLR](http://www.antlr.org/)
 * [GraphViz](www.graphviz.org)
-

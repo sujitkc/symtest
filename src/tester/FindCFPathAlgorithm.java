@@ -1,16 +1,16 @@
 package tester;
 
-import graph.IEdge;
-import graph.IGraph;
-import graph.INode;
-import graph.IPath;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
+import graph.IEdge;
+import graph.IGraph;
+import graph.INode;
+import graph.IPath;
 import mygraph.Path;
 
 public class FindCFPathAlgorithm {
@@ -21,6 +21,10 @@ public class FindCFPathAlgorithm {
 	private INode mTargetNode;    // the target/destination node of the graph
 	private INode mLoopStartNode; // the starting node of the main loop.
 	private IPath path;
+	
+	private static final Logger logger = Logger
+			.getLogger(SymTest.class.getName());
+	
 	/**
 	 * Initializes the algorithm with the given parameters
 	 * Validates the targets
@@ -64,8 +68,8 @@ public class FindCFPathAlgorithm {
 		IPath head = this.findPathToLoopStartNode(this.mGraph.getRoot());
 		path.concatenate(head);
 		
-		System.out.println("FindCFPathAlgorihtm initialized");
-		System.out.println("path to loop start: " + path);
+		logger.finer("FindCFPathAlgorihtm initialized");
+		logger.finer("path to loop start: " + path);
 
 	}
 	
@@ -153,14 +157,13 @@ public class FindCFPathAlgorithm {
 	}
 	
 	public IPath findCFPath(INode startNode, Set<IEdge> targets) throws Exception {
-		System.out.println("findCFPath called with start: " + startNode.getId() 
-						  + " & path: " + path + " & targets: " + targets);
+		logger.finer("start: " + startNode.getId() + " & path: " + path + " & targets: " + targets);
 		
 		Set<IEdge> currentTargets = new HashSet<IEdge>();
 		for(IEdge e : targets) {
 			currentTargets.add(e);
 		}
-		IPath path2 = new Path(this.mGraph);
+		path = new Path(this.mGraph);
 		while(!currentTargets.isEmpty()) {
 			this.mTable = getEmptyTable();
 			IPath newAcyclicPath = findLongestAcyclicPath(startNode, currentTargets);
@@ -173,17 +176,17 @@ public class FindCFPathAlgorithm {
 */
 			
 			currentTargets = updateTargets(newAcyclicPath, currentTargets);
-			path2.concatenate(newAcyclicPath);
+			path.concatenate(newAcyclicPath);
 			List<IEdge> loopEdgeList = this.mTargetNode.getOutgoingEdgeList();
 			if(!loopEdgeList.isEmpty()) {
-				path2.concatenate(this.mTargetNode.getOutgoingEdgeList().get(0));
+				path.concatenate(this.mTargetNode.getOutgoingEdgeList().get(0));
 				startNode = this.mLoopStartNode;
 			}
 			if(mTargetNode.getOutgoingEdgeList().size() == 0) break;
 
 		}
-		System.out.println("findCFPath result path2 = " + path2);
-		return path2;
+		logger.finer("result path = " + path);
+		return path;
 	}
 	
 	private Set<IEdge> updateTargets(IPath newAcyclicPath, Set<IEdge> currentTargets) {

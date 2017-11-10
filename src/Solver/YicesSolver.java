@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import configuration.SymTestConfiguration;
 import expression.ExpressionPreorderToStringVisitor;
 import expression.IExpression;
 import expression.IIdentifier;
@@ -21,7 +22,6 @@ public class YicesSolver implements ISolver {
 
 	IExpression mExpression;
 	Set<IIdentifier> mVariables;
-	private String YICES_PATH = "/usr/local/bin/yices";
 
 	public YicesSolver(Set<IIdentifier> symVars, IExpression exp) {
 		this.mVariables = symVars;
@@ -39,7 +39,7 @@ public class YicesSolver implements ISolver {
 		PrintWriter out = new PrintWriter(outFile);
 		out.println(yicesInput);
 		out.close();
-		String command = YICES_PATH + " resources/input.ys";
+		String command = SymTestConfiguration.YICES_PATH + " resources/input.ys";
 		String output = YicesSolver.cmdExec(command);
 		// System.out.println("yices output :\n" + output);
 

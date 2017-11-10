@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.logging.Logger;
 
 import Solver.SolverResult;
 import cfg.ICFEdge;
@@ -40,6 +41,9 @@ public class SymTest {
 	public ICFGNode mTarget;
 	public SET set;
 	public Set<ApplyHeuristics> heuristics;
+
+	private static final Logger logger = Logger
+			.getLogger(SymTest.class.getName());
 
 	
 	/**
@@ -126,23 +130,23 @@ public class SymTest {
 					// If maximum iterations are done, it is only an empty path
 					// that gets added
 					path = new Path(mGraph);
-					/*
-					FindCFPathAlgorithm2 algorithm = new FindCFPathAlgorithm2(
-							this.mGraph, terminalTarget,
-							this.mConvertor.getGraphNode(this.mTarget));
-					path = algorithm.findCFPath(stack.peek().getFirst()
-								.getHead(), terminalTarget);
-					System.out.println("FINAL PATH : " + path);
-					*/
+//					FindCFPathAlgorithm algorithm = new FindCFPathAlgorithm(
+//							this.mGraph, terminalTarget,
+//							this.mConvertor.getGraphNode(this.mTarget));
+//					path = algorithm.findLongestAcyclicPath(stack.peek().getFirst()
+//								.getHead(), currentTargets);
+//					System.out.println("FINAL PATH : " + path);
 				}
 				completePath.setPath(addprefix(prefix, path.getPath()));
 				ArrayList<ICFEdge> cfPath = convertPathEdgesToCFGEdges(completePath);
+
 				// Construct the Symbolic Execution Tree
 				set = SymTestUtil.getSET(cfPath, this.mCFG);
 				// Solve the predicate
 				SolverResult solution;
 				
-				System.out.println("Complete cfPath: " + cfPath);
+				logger.fine("Complete cfPath: " + cfPath);
+//				if (currentTargets.isEmpty()) {
 				try {
 
 					solution = SymTestUtil.solveSequence(set);
@@ -151,6 +155,7 @@ public class SymTest {
 				} catch (UnSatisfiableException e) {
 					System.out.println("Unsatisfiable");
 				}
+//				}
 
 				// Add heuristics
 				if (this.heuristics != null) {
@@ -167,14 +172,18 @@ public class SymTest {
 					}
 				}
 				if (!hasEncounteredMaximumIterations(completePath)) {
+					logger.fine("Finding Longest Viable Prefix");
+
 					// Get Longest Viable Prefix(LVP)
 					int satisfiableIndex = SymTestUtil
 							.getLongestSatisfiablePrefix(cfPath, mCFG);
 					List<IEdge> satisfiablePrefix = new ArrayList<IEdge>();
+					//TODO Figure out what this does
 					satisfiablePrefix.addAll(completePath.getPath().subList(
 							(completePath.getPath().size() - 1)
 									- path.getPath().size(),
 							satisfiableIndex + 2));
+					logger.finer("Satisfiable index: " + satisfiableIndex);
 
 					updatestack(stack, satisfiablePrefix);
 					prefix.clear();
@@ -184,13 +193,12 @@ public class SymTest {
 							completePath.getPath().indexOf(
 									stack.peek().getFirst())));
 				} else {
-					System.out.println("HERE");
 					prefix.clear();
 					prefix.addAll(completePath.getPath().subList(
 							0,
 							completePath.getPath().lastIndexOf(
 									stack.peek().getFirst())));
-					System.out.println("Complete path: " + completePath);
+					logger.finer("Complete path: " + completePath);
 				}
 
 				backtrack(stack);
@@ -213,7 +221,7 @@ public class SymTest {
 
 				currentTargets.removeAll(prefix);
 				
-				System.out.println("Stack: " + Arrays.toString(stack.toArray()));
+				logger.finest("Stack: " + Arrays.toString(stack.toArray()));
 
 			}
 			System.out.println("Unsatisfiable finally");
@@ -250,7 +258,7 @@ public class SymTest {
 		if (!mTarget.getOutgoingEdgeList().isEmpty()) {
 		count = Collections.frequency(completePath.getPath(),
 				mConvertor.getGraphEdge(mTarget.getOutgoingEdgeList().get(0)));
-		System.out.println("Count: " + count);
+		logger.finer("Count: " + count);
 		if (count >= MAXIMUM_ITERATIONS)
 			return true;
 		else

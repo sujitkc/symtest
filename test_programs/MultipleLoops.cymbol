@@ -1,0 +1,12 @@
+void main() {
+	int x;
+	while(1) {
+		x = input();
+		int y = 10;
+		if (x > y + 3) {
+			x = 10;
+		}
+	}
+
+}
+

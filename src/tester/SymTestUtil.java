@@ -5,6 +5,7 @@ import expression.IIdentifier;
 import expression.Variable;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import Solver.DRealSolver;
 import Solver.ISolver;
@@ -23,6 +24,9 @@ import cfg.ICFG;
  *
  */
 public class SymTestUtil {
+
+	private static final Logger logger = Logger
+			.getLogger(SymTestUtil.class.getName());
 	
 	public static SolverResult solveSequence(SET set) throws Exception {
 		set.updateLeafNodeSet();
@@ -38,7 +42,7 @@ public class SymTestUtil {
 		SETNode leaf = leaves.iterator().next();
 
 		IExpression exp = leaf.getPathPredicate();
-		System.out.println("path predicate = " + exp.toString());
+		logger.fine("path predicate = " + exp.toString());
 		Set<IIdentifier> symVars = set.getVariables();
 		// Using SMT Solver
 		ISolver solver = new YicesSolver(symVars, exp);

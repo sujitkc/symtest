@@ -9,14 +9,15 @@ package frontend;
 import java.io.File;
 import java.io.PrintWriter;
 
+import configuration.SymTestConfiguration;
+
 public class CFGVisualizer {
 
 	// TODO Place into central config file
-	private String DOT_PATH = "/usr/local/bin/dot";
 	private String DOT_OPTIONS = "-Tpng -oresources/cfg.png";
 
 	private String inputFile = "resources/cfg.dot";
-	private String command = DOT_PATH + " " + DOT_OPTIONS + " " + inputFile;
+	private String command = SymTestConfiguration.DOT_PATH + " " + DOT_OPTIONS + " " + inputFile;
 
 	private StringBuilder dotContent = new StringBuilder();
 

@@ -3,7 +3,15 @@ package see;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
+import cfg.ICFEdge;
+import cfg.ICFG;
+import cfg.ICFGBasicBlockNode;
+import cfg.ICFGNode;
+import expression.IExpression;
+import expression.IIdentifier;
+import expression.Type;
 import mycfg.CFGBasicBlockNode;
 import mycfg.CFGDecisionNode;
 import set.SET;
@@ -13,18 +21,13 @@ import set.SETEdge;
 import set.SETExpressionVisitor;
 import set.SETNode;
 import statement.IStatement;
-import cfg.ICFEdge;
-import cfg.ICFG;
-import cfg.ICFGBasicBlockNode;
-import cfg.ICFGNode;
-import expression.GreaterThanExpression;
-import expression.IExpression;
-import expression.IIdentifier;
-import expression.Type;
 
 public class SEE {
 
 	private SET mSET;
+
+	private static final Logger logger = Logger
+			.getLogger(SEE.class.getName());
 
 	public SEE(ICFG cfg) throws Exception {
 		if (cfg != null) {
@@ -47,7 +50,7 @@ public class SEE {
 	 */
 	public void expandSET(List<ICFEdge> cfgEdges) throws Exception {
 		for (ICFEdge edge : cfgEdges) {
-			System.out.println("SEE singlestep edge: " + edge.getId());
+			logger.finest("SEE singlestep edge: " + edge.getId());
 			singlestep(edge);
 		}
 	}
