@@ -1,12 +1,10 @@
 void main() {
         int start = -1;
         int var;
-        while (1) {
-			var = input();
-			if (var > 0) {
-				start = 20;
-			} else {
-			  start = 40;
-			}
+		var = input();
+		if (var > 0) {
+			start = 20;
+		} else {
+		  start = 40;
 		}
 }

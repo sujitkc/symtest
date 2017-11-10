@@ -24,7 +24,17 @@ public class Driver {
 	public static void main(String[] args) throws Exception {
 		InputStream is = null;
 		//USE THIS to specify the input file
-		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/Test2.cymbol";
+//		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/SingleInput.cymbol";
+//		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/MultipleInput.cymbol";
+//		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/NoWhile.cymbol";
+//		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/NestedIf.cymbol";
+//		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/Test3.cymbol";
+		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/Timer.cymbol";
+		
+		//HERE BE DRAGONS
+//		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/Temp.cymbol";
+//		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/Test2.cymbol";
+//		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/Test3.cymbol";
 		if (inputFile != null)
 			is = new FileInputStream(inputFile);
 		logger.info("Input file: " + inputFile);

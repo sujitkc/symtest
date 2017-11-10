@@ -147,14 +147,14 @@ public class SymTest {
 				
 				logger.fine("Complete cfPath: " + cfPath);
 //				if (currentTargets.isEmpty()) {
-				try {
+					try {
 
-					solution = SymTestUtil.solveSequence(set);
-					return (this.convert(set.getLeafNodes().iterator().next(),
-							solution));
-				} catch (UnSatisfiableException e) {
-					System.out.println("Unsatisfiable");
-				}
+						solution = SymTestUtil.solveSequence(set);
+						return (this.convert(set.getLeafNodes().iterator().next(),
+								solution));
+					} catch (UnSatisfiableException e) {
+						System.out.println("Unsatisfiable");
+					}
 //				}
 
 				// Add heuristics
@@ -177,13 +177,15 @@ public class SymTest {
 					// Get Longest Viable Prefix(LVP)
 					int satisfiableIndex = SymTestUtil
 							.getLongestSatisfiablePrefix(cfPath, mCFG);
+					logger.finer("Satisfiable index: " + satisfiableIndex);
+					logger.finer("Complete path size: " + completePath.getSize());
+					logger.finer("path size: " + path.getSize());
 					List<IEdge> satisfiablePrefix = new ArrayList<IEdge>();
 					//TODO Figure out what this does
 					satisfiablePrefix.addAll(completePath.getPath().subList(
 							(completePath.getPath().size() - 1)
 									- path.getPath().size(),
 							satisfiableIndex + 2));
-					logger.finer("Satisfiable index: " + satisfiableIndex);
 
 					updatestack(stack, satisfiablePrefix);
 					prefix.clear();
@@ -214,6 +216,7 @@ public class SymTest {
 								break;
 							}
 						}
+
 						prefix.subList(index+1, prefix.size()).clear();
 						prefix.add(stack.peek().getFirst());
 					}
@@ -301,6 +304,7 @@ public class SymTest {
 				IEdge oldEdge = topmostPair.getFirst();
 				newEdge = getOtherEdge(oldEdge);
 				stack.push(new Pair<IEdge, Boolean>(newEdge, false));
+//				System.out.println("PUSH " + newEdge.getId());
 				return stack;
 			} else
 				return backtrack(stack);

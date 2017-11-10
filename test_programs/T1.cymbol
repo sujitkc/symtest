@@ -1,8 +1,0 @@
-
-void main() {
-        int start = 0;
-        int out;
-        int x  = 12;
-        int y = x + start;
-}
-
