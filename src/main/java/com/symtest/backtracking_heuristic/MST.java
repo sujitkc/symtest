@@ -51,6 +51,14 @@ public class MST {
         }
     }
 
+    public double computeCumulativeWeight() {
+        double sum = 0;
+        for (DirectedEdge e : tree) {
+            sum += e.weight;
+        }
+        return sum;
+    }
+
     public String toString() {
         StringBuilder s = new StringBuilder();
         for (DirectedEdge e : tree) {

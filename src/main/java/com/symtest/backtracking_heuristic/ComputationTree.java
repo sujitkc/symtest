@@ -247,6 +247,56 @@ public class ComputationTree {
             mst = new MST(targetList);
     }
 
+    /**
+     * computeOrderingWithBacktrackingDestination takes a list of target edges and computes 
+     * a MST of those edges.
+     */
+    public double computeOrderingWithBacktrackingDestination(String backtrackingDestination, String targetEdges) {
+            String[] targets = targetEdges.split(" ");
+            ArrayList<DirectedEdge> targetList = new ArrayList<DirectedEdge>();
+            // Created a complete graph with all the target edges (which will be nodes in
+            // this graph).
+            for (int i = 0; i < targets.length; ++i) {
+                for (int j = 0; j < targets.length; ++j) {
+                    if (i == j) {
+                        continue;
+                    }
+                    String np = createNodePair(targets[i], targets[j]);
+                    DirectedEdge e = new DirectedEdge(targets[i], targets[j],
+                            nodePairWeight.getOrDefault(np, Double.MIN_VALUE));
+                    if (e.weight - Double.MIN_VALUE > 1) {
+                        targetList.add(e);
+                    }
+                }
+            }
+            // Add weights from backtracking destination to each target edge.
+            for (int i = 0; i < targets.length; ++i) {
+                String np = createNodePair(backtrackingDestination, targets[i]);
+                DirectedEdge e = new DirectedEdge(backtrackingDestination, targets[i],
+                        nodePairWeight.getOrDefault(np, Double.MIN_VALUE));
+                if (e.weight - Double.MIN_VALUE > 1) {
+                    targetList.add(e);
+                }
+            }
+            MST mst = new MST(targetList);
+            return mst.computeCumulativeWeight();
+    }
+
+    /**
+     * computeComposedWeight computes the composite weight for a given backtracking destination.
+     * Composite weight = sum of edge weights from backtracking destination to each of the remaining
+     *                    target edges.
+     */
+    public double computeCompositeWeight(String backtrackigDestination, String targetEdges) {
+            String[] targets = targetEdges.split(" ");
+            double composedWeight = 0;
+            for (int i = 0; i < targets.length; ++i) {
+                String np = createNodePair(backtrackigDestination, targets[i]);
+                composedWeight += nodePairWeight.getOrDefault(np, Double.MIN_VALUE);
+            }
+            return composedWeight;
+    }
+
     public static void main(String[] args) throws IOException{
         ComputationTree ct = new ComputationTree("/Users/athul/src/symtest/src/main/java/com/symtest/backtracking_heuristic/sample.out", "e1", "e3");
         System.out.println("Computation Tree:");

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +13,7 @@ import java.util.Stack;
 import java.util.logging.Logger;
 
 import com.symtest.Solver.SolverResult;
+import com.symtest.backtracking_heuristic.ComputationTreeHandler;
 import com.symtest.cfg.ICFEdge;
 import com.symtest.cfg.ICFG;
 import com.symtest.cfg.ICFGDecisionNode;
@@ -29,6 +31,8 @@ import com.symtest.mygraph.Path;
 import com.symtest.set.SET;
 import com.symtest.set.SETBasicBlockNode;
 import com.symtest.set.SETNode;
+import com.symtest.utilities.Entry;
+import com.symtest.utilities.MSTWeightCompare;
 import com.symtest.utilities.Pair;
 
 public class SymTest {
@@ -98,18 +102,18 @@ public class SymTest {
 			Set<IEdge> terminalTarget = convertTargetEdgesToGraphEdges(terminalEdgeSet);
 			
 			Set<IEdge> targets = convertTargetEdgesToGraphEdges(this.mTargets);
-			Stack<Pair<IEdge, Boolean>> stack = new Stack<Pair<IEdge, Boolean>>();
+			Stack<Entry> stack = new Stack<Entry>();
 			// Initialise the stack with start edge
 			IEdge startEdge = this.mConvertor.getGraphEdge(mCFG.getStartNode()
 					.getOutgoingEdgeList().get(0));
 			
-			stack.push(new Pair<IEdge, Boolean>(startEdge, true));
+			stack.push(new Entry(startEdge, true));
 			ArrayList<IEdge> prefix = new ArrayList<IEdge>();
 
 			IPath completePath = new Path(mGraph);
 			Set<IEdge> currentTargets = new HashSet<IEdge>(targets);
-			while ((!stack.isEmpty()) && !(stack.peek().getFirst().equals(startEdge) && !stack.peek()
-					.getSecond())) {
+			while ((!stack.isEmpty()) && !(stack.peek().getEdge().equals(startEdge) && 
+										   !stack.peek().getBranch())) {
 				// Obtain the path that traverses the targets.
 				IPath path;
 				if (!hasEncounteredMaximumIterations(completePath)) {
@@ -119,11 +123,11 @@ public class SymTest {
 
 					if (stack.size() != 1) {
 
-						path = algorithm.findCFPath(stack.peek().getFirst()
+						path = algorithm.findCFPath(stack.peek().getEdge()
 								.getHead(), currentTargets);
 					} else {
 						prefix.add(startEdge);
-						path = algorithm.findCFPath(stack.peek().getFirst()
+						path = algorithm.findCFPath(stack.peek().getEdge()
 								.getHead(), currentTargets);
 					}
 				} else {
@@ -189,36 +193,39 @@ public class SymTest {
 
 					updatestack(stack, satisfiablePrefix);
 					prefix.clear();
-
 					prefix.addAll(completePath.getPath().subList(
 							0,
 							completePath.getPath().indexOf(
-									stack.peek().getFirst())));
+									stack.peek().getEdge())));
+					updateStackTargets(stack, prefix);
+					System.out.println("#####UpdtedPrefix" + prefix + "####");
+					System.out.println("#####Targets" + convertTargetEdgesToGraphEdges(mTargets) + "####");
+					System.out.println("#####Updated STACK CONTENTS: " + Arrays.toString(stack.toArray()));
 				} else {
 					prefix.clear();
 					prefix.addAll(completePath.getPath().subList(
 							0,
 							completePath.getPath().lastIndexOf(
-									stack.peek().getFirst())));
+									stack.peek().getEdge())));
 					logger.finer("Complete path: " + completePath);
 				}
 
 				backtrack(stack);
 				if (!stack.isEmpty()) {
 					// Add the updated edge
-					if (stack.peek().getFirst().getTail().getId() == prefix.get(prefix.size()-1).getHead().getId()) {
-						prefix.add(stack.peek().getFirst());
+					if (stack.peek().getEdge().getTail().getId() == prefix.get(prefix.size()-1).getHead().getId()) {
+						prefix.add(stack.peek().getEdge());
 					} else {
 						int index = -1;
 						for (int i = prefix.size()-1; i >= 0; i--) {
-							if (stack.peek().getFirst().getTail().getId() == prefix.get(i).getHead().getId()) {
+							if (stack.peek().getEdge().getTail().getId() == prefix.get(i).getHead().getId()) {
 								index = i;
 								break;
 							}
 						}
 
 						prefix.subList(index+1, prefix.size()).clear();
-						prefix.add(stack.peek().getFirst());
+						prefix.add(stack.peek().getEdge());
 					}
 				}
 
@@ -240,14 +247,34 @@ public class SymTest {
 	 * @param stack
 	 * @param path that hets added newly
 	 */
-	private void updatestack(Stack<Pair<IEdge, Boolean>> stack, List<IEdge> path) {
+	private void updatestack(Stack<Entry> stack, List<IEdge> path) {
 		for (IEdge e : path) {
 			// Push only decision node's edges
 			if (this.mConvertor.getCFEdge(e).getTail() instanceof ICFGDecisionNode) {
-				stack.push(new Pair<IEdge, Boolean>(e, true));
+				stack.push(new Entry(e, true));
 			}
 		}
 
+	}
+
+	private void updateStackTargets(Stack<Entry> stack, List<IEdge> path) throws Exception{
+		Set<IEdge> targets = convertTargetEdgesToGraphEdges(mTargets);
+		Iterator<Entry> itrStack = stack.iterator();
+		Iterator<IEdge> itrPath = path.iterator();
+		while (itrStack.hasNext() ) {
+			Entry stackEntry = itrStack.next();
+			while (itrPath.hasNext()) {
+				IEdge pathEdge = itrPath.next();
+				targets.remove(pathEdge);
+				if (pathEdge.getId() == stackEntry.getEdge().getId()) {
+					stackEntry.setRemainingTargets(targets);
+					break;
+				}
+			} 
+			if (!itrPath.hasNext()) {
+				stackEntry.setRemainingTargets(targets);
+			}
+		}
 	}
 
 	/**
@@ -282,6 +309,42 @@ public class SymTest {
 		return completePath;
 	}
 
+	public Stack<Entry> backtrack(
+			Stack<Entry> stack) {
+
+		if (shouldUseBacktrackingHeuristic()) {
+			return backtrackWithHeuristic(stack);
+		} else {
+			return backtrackWithoutHeuristic(stack);
+		}
+	}
+
+	public boolean shouldUseBacktrackingHeuristic() {
+		return ComputationTreeHandler.isInitialized();
+	}
+
+	public Stack<Entry> backtrackWithHeuristic(Stack<Entry> stack) {
+		// XXXX Check if the past runs data has been loaded. Don't use
+		// this otherwise.
+
+		int N = 3;
+		// We take the top N destinations with the highest compositeWeight as
+		// possible candidates for backtracking.
+		// XXXX This can be made more efficient.
+		List<Entry> destinations = new ArrayList<Entry>(stack);
+		Collections.sort(destinations);
+		ArrayList<Entry> possibleDest = new ArrayList<Entry>(destinations.subList(0, N));
+		// Sort the possible destinations based on weight of the MST formed with the edge and the 
+		// set of remaining decision edges.
+		Collections.sort(possibleDest, new MSTWeightCompare());
+		Entry destination = possibleDest.get(0);
+		// Pop out everything from the stack until the destination
+		while (!stack.peek().equals(destination)) {
+			stack.pop();
+		}
+		return stack;
+	}
+
 	/**
 	 * Backtracks the stack by one step
 	 * if the topmost element has (edge, true), It pushes the other edge of the decision node as (otheredge, false)
@@ -290,26 +353,32 @@ public class SymTest {
 	 * @param stack
 	 * @return
 	 */
-	public Stack<Pair<IEdge, Boolean>> backtrack(
-			Stack<Pair<IEdge, Boolean>> stack) {
-		if (!stack.isEmpty()) {
-			Pair<IEdge, Boolean> topmostPair = stack.pop();
-			if (stack.isEmpty()) {
-				return stack;
-			}
-
-			// Push the other edge of the node with a false
-			if (topmostPair.getSecond()) {
-				IEdge newEdge = null;
-				IEdge oldEdge = topmostPair.getFirst();
-				newEdge = getOtherEdge(oldEdge);
-				stack.push(new Pair<IEdge, Boolean>(newEdge, false));
-//				System.out.println("PUSH " + newEdge.getId());
-				return stack;
-			} else
-				return backtrack(stack);
-		} else
+	public Stack<Entry> backtrackWithoutHeuristic(Stack<Entry> stack) {
+		// Return on empty stack. 
+		// We'd never hit here since we won't recurse after
+		// popping the initial edge. Remove this later if this 
+		// proves useless.
+		if (stack.isEmpty()) {
 			return stack;
+		}
+
+		Entry topmostPair = stack.pop();
+		if (stack.isEmpty()) {
+			// We've just popped off the initial edge.
+			// Stop here, since it does not have another branch like
+			// other decision nodes.
+			return stack;
+		}
+
+		// Push the other edge of the node with a false
+		if (topmostPair.getBranch()) {
+			IEdge oldEdge = topmostPair.getEdge();
+			IEdge newEdge = getOtherEdge(oldEdge);
+			stack.push(new Entry(newEdge, false));
+			return stack;
+		} 
+
+		return backtrackWithoutHeuristic(stack);
 	}
 
 	private IEdge getOtherEdge(IEdge oldEdge) {

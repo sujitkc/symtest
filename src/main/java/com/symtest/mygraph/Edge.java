@@ -72,6 +72,7 @@ public class Edge implements IEdge {
 
 	//Extra
 	public String toString() {
-		return "IEdge " + this.mId + " tail = " + this.mTail.getId() + " head = " + this.mHead.getId() + "\n";
+		// return "Edge " + this.mId + " tail = " + this.mTail.getId() + " head = " + this.mHead.getId() + "\n";
+		return this.mId ;
 	}
 }
