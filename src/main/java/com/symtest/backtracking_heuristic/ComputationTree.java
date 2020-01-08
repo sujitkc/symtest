@@ -298,7 +298,7 @@ public class ComputationTree {
     }
 
     public static void main(String[] args) throws IOException{
-        ComputationTree ct = new ComputationTree("/Users/athul/src/symtest/src/main/java/com/symtest/backtracking_heuristic/sample.out", "e1", "e3");
+        ComputationTree ct = new ComputationTree("/Users/athul/src/symtest/H_4targets.cymbol", "BEGIN->BB1", "WHILE->D3");
         System.out.println("Computation Tree:");
         System.out.println(ct.root);
         System.out.println("Edges in MST (with inverted weights):");

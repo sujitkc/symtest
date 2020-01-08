@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - ComputationTree",
+            "request": "launch",
+            "mainClass": "com.symtest.backtracking_heuristic.ComputationTree",
+            "projectName": "symtest"
+        }
+    ]
+}

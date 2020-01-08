@@ -17,6 +17,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import com.symtest.backtracking_heuristic.ComputationTree;
 import com.symtest.cymbol.CymbolLexer;
 import com.symtest.cymbol.CymbolParser;;
 
@@ -38,6 +39,10 @@ public class Driver {
 //		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/Test2.cymbol";
 //		String inputFile = "/Users/athul/src/SKC/symtest/test_programs/Test3.cymbol";
 		logger.info("Input file: " + args[0]);
+		// Initialize Computation Tree
+        ComputationTree ct = new ComputationTree(args[0], "BEGIN->BB1", "BB2->D3");
+        System.out.println("Computation Tree Initialized");
+        ct.computeOrdering("D7->BB9 D10->BB12 D19->BB20");
 		// ANTLR Boilerplate code
 		// ANTLRInputStream input = new ANTLRInputStream(is);
 		CharStream input = CharStreams.fromFileName(args[0]);
