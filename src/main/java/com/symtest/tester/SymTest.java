@@ -312,7 +312,8 @@ public class SymTest {
 	public Stack<Entry> backtrack(
 			Stack<Entry> stack) {
 
-		if (shouldUseBacktrackingHeuristic()) {
+		if (shouldUseBacktrackingHeuristic() && !stack.isEmpty()) {
+			System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 			return backtrackWithHeuristic(stack);
 		} else {
 			return backtrackWithoutHeuristic(stack);
@@ -331,7 +332,9 @@ public class SymTest {
 		// We take the top N destinations with the highest compositeWeight as
 		// possible candidates for backtracking.
 		// XXXX This can be made more efficient.
-		List<Entry> destinations = new ArrayList<Entry>(stack);
+		ArrayList<Entry> destinations = new ArrayList<Entry>(stack);
+		System.out.println("XXX");
+		System.out.println(destinations);
 		Collections.sort(destinations);
 		ArrayList<Entry> possibleDest = new ArrayList<Entry>(destinations.subList(0, N));
 		// Sort the possible destinations based on weight of the MST formed with the edge and the 

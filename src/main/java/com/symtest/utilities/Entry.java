@@ -47,10 +47,27 @@ public class Entry implements Comparable<Entry>{
         return s;
     }
 
+    // FIX
+    private String helper(Set<IEdge> r) {
+        if (r.size() > 0) {
+            StringBuilder nameBuilder = new StringBuilder();
+        
+            for (IEdge n : r) {
+                nameBuilder.append(n).append(",");
+            }
+            nameBuilder.deleteCharAt(nameBuilder.length() - 1);
+            return nameBuilder.toString();
+        } else {
+            return "";
+        }
+    }
+
     @Override
     public int compareTo(Entry o) {
-        String targets = String.join(",", remainingTargets.toArray(new String[0]));
-        String otherTargets = String.join(",", o.remainingTargets.toArray(new String[0]));
+        // String targets = String.join(",", remainingTargets.toArray(new String[0]));
+        // String otherTargets = String.join(",", o.remainingTargets.toArray(new String[0]));
+        String targets = helper(remainingTargets);
+        String otherTargets = helper(o.remainingTargets);
 
         ComputationTree compTree = ComputationTreeHandler.get();
         double currScore = compTree.computeCompositeWeight(edge.getId(), targets);
