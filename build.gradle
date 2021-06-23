@@ -1,0 +1,58 @@
+// Based on https://github.com/svzdvd/antlr4-gradle-example/blob/master/build.gradle
+plugins {
+    id 'java'
+    id 'antlr'
+    id 'application'
+}
+
+mainClassName = "com.symtest.frontend.Driver"
+archivesBaseName = "symtest"
+version = '2.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    antlr "org.antlr:antlr4:4.7.1"
+    compile "org.antlr:antlr4-runtime:4.7.1"
+    testCompile "junit:junit:4.12"
+}
+
+generateGrammarSource {
+    maxHeapSize = "64m"
+    arguments += ["-no-listener", "-visitor", "-long-messages"]
+    // Keep a copy of generated sources
+    doLast {
+        println "Copying generated grammar lexer/parser files to main directory."
+        copy {
+            from "${buildDir}/generated-src/antlr/main"
+            into "src/main/java/com/symtest"
+        }
+        delete "${buildDir}/generated-src/"
+    }
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.symtest.frontend.Driver'
+        )
+    }
+}
+
+clean.doLast {
+    file('generated-src').deleteDir()
+    file('src/main/java/com/symtest/cymbol').deleteDir()
+}
+
+task fatJar(type: Jar) {
+    classifier = 'all'
+    manifest {
+        attributes(
+                'Main-Class': 'com.symtest.frontend.Driver'
+        )
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
