@@ -7,7 +7,7 @@ SymTest is a test generation tool using symbolic testing and graph algorithms to
 
 
 ## Dependencies
-* Install [Gradle](https://gradle.org/install/).
+* Install [Gradle](https://gradle.org/install/).(gradle6.0 is preferred if latest version is used update the build.gradle file accordingly.)
 * Install the [Z3 Solver](https://github.com/Z3Prover/z3) for your platform.
 * Install [GraphViz](http://www.graphviz.org/Download.php) for CFG Visualization.
 
