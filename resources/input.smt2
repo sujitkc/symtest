@@ -1,0 +1,6 @@
+(declare-fun symvar1438971453 () Int)
+(declare-fun symvar1753164252 () Int)
+(assert ( and true ( > symvar1753164252 ( + 10 3))))
+(check-sat)
+(get-model)
+(exit)

@@ -1,0 +1,14 @@
+void main() {
+	int x = 5;
+	while(1) {
+		int in1 = input();
+		int in2 = input();
+		if ((in1 > 15) && (in2 < 20)) {
+			in1 = 10 + 20;
+		} else {
+			in1 = 1 + 2;
+		}
+	}
+
+}
+

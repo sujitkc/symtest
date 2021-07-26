@@ -1,0 +1,7 @@
+(define symvar256886219::int)
+(define symvar182896471::int)
+(define symvar369820627::int)
+(define symvar1351489374::int)
+(assert ( and ( and true ( not ( > ( + symvar182896471 symvar256886219) 3))) ( not ( < ( + ( * symvar182896471 symvar182896471) ( * symvar256886219 symvar256886219)) 30))))
+(check)
+(show-model)
