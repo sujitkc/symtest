@@ -15,8 +15,8 @@ repositories {
 
 dependencies {
     antlr "org.antlr:antlr4:4.7.1"
-    compile "org.antlr:antlr4-runtime:4.7.1"
-    testCompile "junit:junit:4.12"
+    api "org.antlr:antlr4-runtime:4.7.1"
+    testImplementation "junit:junit:4.12"
 }
 
 generateGrammarSource {
@@ -53,6 +53,6 @@ task fatJar(type: Jar) {
                 'Main-Class': 'com.symtest.frontend.Driver'
         )
     }
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
