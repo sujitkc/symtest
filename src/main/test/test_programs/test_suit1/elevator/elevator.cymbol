@@ -1,0 +1,80 @@
+void main() {
+
+		int constant1 = -1;
+		int constant2 = 0;
+		int constant3 = 1;		
+		
+		
+		int min = 10;
+		int max = constant2;
+		
+		while(true){
+		
+		int floorInput = input();
+		int shouldStop = input();
+		int direction = input();
+		int checkMax = input();
+		int checkMin = input();
+		int req1 = input();
+		int position = input();
+		
+		if((floorInput > constant1)&&(11>floorInput)) 
+		{
+			if(shouldStop == constant2)
+			{
+				if(floorInput > 5)
+				{
+					direction = constant3;
+					checkMax = constant3;
+					max = floorInput;
+				}
+				else{
+						if(5>floorInput)
+						{	
+							shouldStop = constant1;
+							direction = constant2;
+						}
+						else{
+							direction = constant1;
+							checkMin = constant3;
+						}
+				}
+				
+			}
+			else{
+					if(shouldStop > constant2)
+					{
+						if(floorInput > position)
+						{
+							checkMin = constant3;
+							if(min>floorInput)
+							{
+								min = floorInput;
+							}
+						}
+						else
+						{
+							checkMax = constant3;
+							if(floorInput>max)
+							{
+								max = floorInput;
+							}
+						}
+					}
+			}
+			if(req1 == constant2)
+			{
+				shouldStop = shouldStop+constant3;
+				if(shouldStop > constant2)
+				{
+					req1 = constant3;
+				}
+				
+			}
+		}
+		}
+		
+		
+		
+		
+}

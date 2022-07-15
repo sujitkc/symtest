@@ -12,6 +12,7 @@ import com.symtest.Solver.ISolver;
 import com.symtest.Solver.SolverResult;
 import com.symtest.Solver.YicesSolver;
 import com.symtest.Solver.Z3Solver;
+
 import com.symtest.see.SEE;
 import com.symtest.set.SET;
 import com.symtest.set.SETNode;
@@ -45,9 +46,9 @@ public class SymTestUtil {
 		logger.fine("path predicate = " + exp.toString());
 		Set<IIdentifier> symVars = set.getVariables();
 		// Using SMT Solver
-		ISolver solver = new Z3Solver(symVars, exp);
 //		ISolver solver = new YicesSolver(symVars, exp);
 //		ISolver solver = new DRealSolver(symVars, exp);
+		ISolver solver = new Z3Solver(symVars, exp);
 		SolverResult solution = solver.solve();
 		return solution;
 	}
@@ -76,6 +77,7 @@ public class SymTestUtil {
 
 	}
 
+	
 	private static boolean isSAT(List<ICFEdge> path, ICFG cfg) throws Exception {
 //		System.out.println("@@@UTIL Bin candidate getSET");
 		SET set = getSET(path, cfg);

@@ -1,0 +1,43 @@
+void main() {
+        int x = input();
+	       while (true) {
+		if(x<110){
+        	  if (x < 90) 
+        	  {
+        	  	if (x < 50) 
+        	  	{
+        	      	x = x + 40;
+        	      	if(x < 25)
+        	      	{
+        	      		x = x + 50;
+        	    	}
+        	    	else
+        	    	{
+        	    		x = x + 10;
+        	    	}
+        	    }
+        	    else
+        	    {
+        	    	x = x + 1;
+        	    }
+        	  }
+        	  else
+        	   {
+        	   	x = x + 5 ;
+        	   }        	  
+        	    if((x > 90)&&(x < 100))
+        	    {
+        	      x = x + 5;
+        	    }
+        	    else
+        	    {
+        	    	x = x + 1;
+        	    }
+		}
+		else
+		{
+			x = x + 1;
+		}
+        	        	  
+        }
+}

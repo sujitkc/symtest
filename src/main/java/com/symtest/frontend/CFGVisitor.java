@@ -19,19 +19,12 @@ package com.symtest.frontend;
  * Add rules for Booleans & Division
  */
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
 import com.symtest.cfg.ICFG;
 import com.symtest.cymbol.CymbolBaseVisitor;
 import com.symtest.cymbol.CymbolParser;
 import com.symtest.expression.AddExpression;
 import com.symtest.expression.AndExpression;
+import com.symtest.expression.BooleanInput;
 import com.symtest.expression.ConcreteConstant;
 import com.symtest.expression.EqualsExpression;
 import com.symtest.expression.Expression;
@@ -41,20 +34,26 @@ import com.symtest.expression.GreaterThanExpression;
 import com.symtest.expression.IExpression;
 import com.symtest.expression.IIdentifier;
 import com.symtest.expression.Input;
-import com.symtest.expression.RealInput;
-import com.symtest.expression.BooleanInput;
 import com.symtest.expression.LesserThanEqualToExpression;
 import com.symtest.expression.LesserThanExpression;
 import com.symtest.expression.MulExpression;
 import com.symtest.expression.NotExpression;
 import com.symtest.expression.OrExpression;
+import com.symtest.expression.RealInput;
 import com.symtest.expression.SubExpression;
 import com.symtest.expression.Type;
 import com.symtest.expression.Variable;
 import com.symtest.statement.IStatement;
 import com.symtest.statement.Statement;
-import com.symtest.tester.SymTest;
-import com.symtest.tester.TestSequence;
+import com.symtest.tester.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.HashMap; 
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+
 
 
 public class CFGVisitor extends CymbolBaseVisitor<Value> {
@@ -122,7 +121,7 @@ public class CFGVisitor extends CymbolBaseVisitor<Value> {
 
 		// TODO Add more documentation about what's going on here.
 		// TODO Move this out of here into Driver
-		SymTest st = new SymTest(mCFG, mCreator.targets);
+		SymTest st = new SymTest_RL_trained(mCFG, mCreator.targets);
 		TestSequence seq = st.generateTestSequence();
 		Map<IIdentifier, List<Object>> testseq = seq.getTestSequence();
 		System.out.println("Test Seq: " + testseq);

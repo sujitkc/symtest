@@ -1,0 +1,32 @@
+int main()
+{
+  int x1=input();
+  int x2=input();
+  int x3=input();
+  int d1=1;
+  int d2=1;
+  int d3=1;
+  int error = 0;
+  int c1=input();
+  int c2=input();
+  
+  while(((x1>0) && (x2>0)) && (x3>0))
+  {
+    if (c1>0) x1=x1-d1;
+    else if (c2<0) x2=x2-d2;
+    else x3=x3-d3;
+    c1=input();
+    c2=input();
+  }
+
+  if(((x1!=0) && (x2!=0)) && (x3!=0))
+  {
+     error = 1;
+  }
+  else
+    {
+        error = 0;
+    }
+  
+}
+

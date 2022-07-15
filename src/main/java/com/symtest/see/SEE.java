@@ -73,7 +73,7 @@ public class SEE {
 		this.mSET.updateLeafNodeSet();
 		Set<SETNode> newLeafNodes = new HashSet<SETNode>();
 		newLeafNodes = this.mSET.getLeafNodes();
-//		System.out.println("SYMTEST DEBUG newLeafNodes: " + newLeafNodes);
+		//System.out.println("SYMTEST DEBUG newLeafNodes: " + newLeafNodes);
 		// check for null edge
 		if (edge == null) {
 			throw new Exception("Null Edge");

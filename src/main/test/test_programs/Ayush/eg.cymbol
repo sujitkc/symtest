@@ -1,0 +1,28 @@
+void main()
+{
+	int x = input();
+        int y = input();
+    while(1)
+    {
+        if(x<8){
+        if(x>y)
+        {
+            x=x-10;
+            y=y-10;
+        }
+        else 
+        {
+            x=x-10;
+            y=y-10;
+        }
+        if( x<y )
+        {
+            x=16;
+        }
+        else
+        {
+            y=8;
+        }
+        }
+    }
+}

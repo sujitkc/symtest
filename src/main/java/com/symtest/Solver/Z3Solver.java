@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import com.symtest.configuration.SymTestConfiguration;
 import com.symtest.expression.ExpressionPreorderToStringVisitor;
 import com.symtest.expression.IExpression;
 import com.symtest.expression.IIdentifier;
@@ -33,17 +32,20 @@ public class Z3Solver implements ISolver {
 		String z3Input = Z3Solver.makeZ3Input(this.mVariables,
 				this.mExpression);
 
+		//System.out.println("z3 input :\n" + z3Input);
+
 		FileWriter outFile;
-		
+
 		outFile = new FileWriter("resources/input.smt2");
 		PrintWriter out = new PrintWriter(outFile);
 		out.println(z3Input);
 		out.close();
 		String command = "z3 resources/input.smt2";
 		String output = Z3Solver.cmdExec(command);
+		//System.out.println("z3 output :\n" + output);
 
-		
 		SolverResult result = this.parseZ3Output(output);
+		System.out.print("solver result = " + result.toString());
 		return result;
 
 	}
@@ -116,14 +118,17 @@ public class Z3Solver implements ISolver {
 			tokens.add(tokeniser.nextToken());
 		}
 		Boolean isSat = false;
-		
-		  
+	/*	int m = 0;
+		  System.out.print("tokens = "); for(String t : tokens) {
+		  System.out.print(m + t + " "); m++;}
+	*/ 
 		Map<IIdentifier, Object> map = new HashMap<IIdentifier, Object>();
 		if (tokens.get(0).equals("sat")) {
 			isSat = true;
 
 			for (int i = 3; i < tokens.size(); i = i + 5) {
 				String varName = tokens.get(i);
+				//System.out.println("Varname-->"+varName);
 				IIdentifier var = this.getVariableByName(varName);
 				if (var == null) {
 					Exception e = new Exception(
@@ -131,15 +136,22 @@ public class Z3Solver implements ISolver {
 									+ varName + "' not found.");
 					throw e;
 				}
+				//System.out.println("1->"+tokens.get(i + 3));
+				
 				Object value;
-				if(tokens.get(i+3).equals("(-")){
-					System.out.println("Token with -"+(i+4)+"===============>"+"-"+tokens.get(i+4));
-					value = "-"+Z3Solver.parseVariableValue(var,tokens.get(i + 4));
+				if(tokens.get(i + 3).equals("(-"))
+				{
+					//System.out.println("2->"+tokens.get(i + 4));
+				    	value = Z3Solver.parseVariableValue(var,
+						"-"+tokens.get(i + 4));
 					i = i + 1;
 				}
 				else{
-					value = Z3Solver.parseVariableValue(var,tokens.get(i + 3));
+					value = Z3Solver.parseVariableValue(var,
+						tokens.get(i + 3));
 				}
+				
+				System.out.println(var+"-->"+value);
 				
 				map.put(var, value);
 			}
@@ -153,13 +165,9 @@ public class Z3Solver implements ISolver {
 			return Integer.parseInt(value);
 		} else if (var.getType().equals(Type.BOOLEAN)) {
 			return Boolean.parseBoolean(value);
-		}/*else if (var.getType().equals(Type.REAL")){
-               		 return "real";
-            	}*/
-		 else {
-			Exception e = new Exception(
-					"Z3Solver.parseVariableValue : type of variable '"
-							+ var.getName() + "' not handled.");
+		} else {
+			System.out.println(var.getName()+ "not handled");
+			Exception e = new Exception("Z3Solver.parseVariableValue : type of variable '"+ var.getName() + "' not handled.");
 			throw e;
 		}
 	}

@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,9 +31,11 @@ import com.symtest.set.SETBasicBlockNode;
 import com.symtest.set.SETNode;
 import com.symtest.utilities.Pair;
 
-public class SymTest {
+public abstract class SymTest {
 
-	private static final int MAXIMUM_ITERATIONS = 5;
+	abstract Stack<Pair<IEdge, Boolean>> backtrack(Stack<Pair<IEdge, Boolean>> stck);
+
+	protected static final int MAXIMUM_ITERATIONS = 100000000;
 	public ICFG mCFG;
 	public CFGToGraphConvertor mConvertor;
 	public IGraph mGraph;
@@ -43,7 +44,7 @@ public class SymTest {
 	public SET set;
 	public Set<ApplyHeuristics> heuristics;
 
-	private static final Logger logger = Logger
+	protected static final Logger logger = Logger
 			.getLogger(SymTest.class.getName());
 
 	
@@ -89,9 +90,15 @@ public class SymTest {
 	 * Repeat the process with the new preferred edge. 
 	 * @return
 	 */
-	 public TestSequence generateTestSequence() {
+	public TestSequence generateTestSequence() {
 		TestSequence testseq = null;
 		try {
+			
+			//EXTRA
+			Set<ICFEdge> terminalEdgeSet = new HashSet<ICFEdge>();
+			terminalEdgeSet.add(mCFG.getStopNode().getOutgoingEdge());
+			Set<IEdge> terminalTarget = convertTargetEdgesToGraphEdges(terminalEdgeSet);
+			
 			Set<IEdge> targets = convertTargetEdgesToGraphEdges(this.mTargets);
 			Stack<Pair<IEdge, Boolean>> stack = new Stack<Pair<IEdge, Boolean>>();
 			// Initialise the stack with start edge
@@ -125,21 +132,32 @@ public class SymTest {
 					// If maximum iterations are done, it is only an empty path
 					// that gets added
 					path = new Path(mGraph);
+//					FindCFPathAlgorithm algorithm = new FindCFPathAlgorithm(
+//							this.mGraph, terminalTarget,
+//							this.mConvertor.getGraphNode(this.mTarget));
+//					path = algorithm.findLongestAcyclicPath(stack.peek().getFirst()
+//								.getHead(), currentTargets);
+//					System.out.println("FINAL PATH : " + path);
 				}
 				completePath.setPath(addprefix(prefix, path.getPath()));
 				ArrayList<ICFEdge> cfPath = convertPathEdgesToCFGEdges(completePath);
+
 				// Construct the Symbolic Execution Tree
 				set = SymTestUtil.getSET(cfPath, this.mCFG);
 				// Solve the predicate
 				SolverResult solution;
-				try {
+				
+				logger.fine("Complete cfPath: " + cfPath);
+//				if (currentTargets.isEmpty()) {
+					try {
 
-					solution = SymTestUtil.solveSequence(set);
-					return (this.convert(set.getLeafNodes().iterator().next(),
-							solution));
-				} catch (UnSatisfiableException e) {
-					System.out.println("Unsatisfiable");
-				}
+						solution = SymTestUtil.solveSequence(set);
+						return (this.convert(set.getLeafNodes().iterator().next(),
+								solution));
+					} catch (UnSatisfiableException e) {
+						System.out.println("Unsatisfiable");
+					}
+//				}
 
 				// Add heuristics
 				if (this.heuristics != null) {
@@ -156,10 +174,16 @@ public class SymTest {
 					}
 				}
 				if (!hasEncounteredMaximumIterations(completePath)) {
+					logger.fine("Finding Longest Viable Prefix");
+
 					// Get Longest Viable Prefix(LVP)
 					int satisfiableIndex = SymTestUtil
 							.getLongestSatisfiablePrefix(cfPath, mCFG);
+					logger.finer("Satisfiable index: " + satisfiableIndex);
+					logger.finer("Complete path size: " + completePath.getSize());
+					logger.finer("path size: " + path.getSize());
 					List<IEdge> satisfiablePrefix = new ArrayList<IEdge>();
+					//TODO Figure out what this does
 					satisfiablePrefix.addAll(completePath.getPath().subList(
 							(completePath.getPath().size() - 1)
 									- path.getPath().size(),
@@ -178,14 +202,31 @@ public class SymTest {
 							0,
 							completePath.getPath().lastIndexOf(
 									stack.peek().getFirst())));
+					logger.finer("Complete path: " + completePath);
 				}
 
 				backtrack(stack);
 				if (!stack.isEmpty()) {
 					// Add the updated edge
-					prefix.add(stack.peek().getFirst());
+					if (stack.peek().getFirst().getTail().getId() == prefix.get(prefix.size()-1).getHead().getId()) {
+						prefix.add(stack.peek().getFirst());
+					} else {
+						int index = -1;
+						for (int i = prefix.size()-1; i >= 0; i--) {
+							if (stack.peek().getFirst().getTail().getId() == prefix.get(i).getHead().getId()) {
+								index = i;
+								break;
+							}
+						}
+
+						prefix.subList(index+1, prefix.size()).clear();
+						prefix.add(stack.peek().getFirst());
+					}
 				}
+
 				currentTargets.removeAll(prefix);
+				
+				logger.finest("Stack: " + Arrays.toString(stack.toArray()));
 
 			}
 			System.out.println("Unsatisfiable finally");
@@ -195,24 +236,23 @@ public class SymTest {
 
 		return testseq;
 	}
-	 
 
 	/**
 	 * This function pushes only the outgoing edge of decision node contained in the path into the stack. 
 	 * @param stack
 	 * @param path that hets added newly
 	 */
-	private void updatestack(Stack<Pair<IEdge, Boolean>> stack, List<IEdge> path) {
-		for (IEdge e : path) {
+	protected void updatestack(Stack<Pair<IEdge, Boolean>> stack, List<IEdge> path) {
+		for (IEdge e : path.subList(0, path.size())) {
 			// Push only decision node's edges
 			if (this.mConvertor.getCFEdge(e).getTail() instanceof ICFGDecisionNode) {
 				stack.push(new Pair<IEdge, Boolean>(e, true));
 			}
+			
+			//stack.push(new Pair <IEdge, Boolean> (e, true));
 		}
 
 	}
-
-	
 
 	/**
 	 * Checks if the maximum iterations are explored. This avoids infinite loops.
@@ -220,7 +260,7 @@ public class SymTest {
 	 * @param completePath
 	 * @return
 	 */
-	private boolean hasEncounteredMaximumIterations(IPath completePath) {
+	protected boolean hasEncounteredMaximumIterations(IPath completePath) {
 		int count = 0;
 		if (!mTarget.getOutgoingEdgeList().isEmpty()) {
 		count = Collections.frequency(completePath.getPath(),
@@ -239,14 +279,13 @@ public class SymTest {
 	 * @param path
 	 * @return complete path
 	 */
-	private List<IEdge> addprefix(ArrayList<IEdge> prefix, ArrayList<IEdge> path) {
+	protected List<IEdge> addprefix(ArrayList<IEdge> prefix, ArrayList<IEdge> path) {
 		List<IEdge> completePath = new ArrayList<IEdge>();
 		completePath.addAll(prefix);
 		completePath.addAll(path);
 		return completePath;
 	}
 
-	
 	/**
 	 * Backtracks the stack by one step
 	 * if the topmost element has (edge, true), It pushes the other edge of the decision node as (otheredge, false)
@@ -255,7 +294,7 @@ public class SymTest {
 	 * @param stack
 	 * @return
 	 */
-	public Stack<Pair<IEdge, Boolean>> backtrack(
+/*	public Stack<Pair<IEdge, Boolean>> backtrack(
 			Stack<Pair<IEdge, Boolean>> stack) {
 		if (!stack.isEmpty()) {
 			Pair<IEdge, Boolean> topmostPair = stack.pop();
@@ -269,17 +308,20 @@ public class SymTest {
 				IEdge oldEdge = topmostPair.getFirst();
 				newEdge = getOtherEdge(oldEdge);
 				stack.push(new Pair<IEdge, Boolean>(newEdge, false));
+//				System.out.println("PUSH " + newEdge.getId());
 				return stack;
 			} else
 				return backtrack(stack);
 		} else
 			return stack;
 	}
-	
-
-	private IEdge getOtherEdge(IEdge oldEdge) {
+*/
+	public IEdge getOtherEdge(IEdge oldEdge) {
 		IEdge newEdge = null;
 		INode node = oldEdge.getTail();
+
+		if(node.getOutgoingEdgeList().size()<=1)
+			return null;
 
 		if (oldEdge.equals(node.getOutgoingEdgeList().get(0))) {
 			newEdge = node.getOutgoingEdgeList().get(1);
@@ -316,7 +358,7 @@ public class SymTest {
 	 * @return
 	 * @throws Exception
 	 */
-	private TestSequence convert(SETNode leaf, SolverResult solution)
+	protected TestSequence convert(SETNode leaf, SolverResult solution)
 			throws Exception {
 		TestSequence ts = null;
 		if (solution.getResult()) {

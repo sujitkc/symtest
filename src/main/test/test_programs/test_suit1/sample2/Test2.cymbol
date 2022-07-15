@@ -1,0 +1,20 @@
+void main()
+{
+	int d;
+	int out;
+  	while(1)
+   	{
+		d = input();
+		if (d <= 99) {
+			if (d >= 90) {
+				out = 9;
+			} else {
+				if(d >= 80){out = 80;}
+				if((d >= 70)&&(d < 80)){out = 70;}
+				if((d >= 60)&&(d < 70)){out = 60;}
+				if((d >= 50)&&(d < 60)){out = 50;}
+			}
+		} 
+	}
+
+}
