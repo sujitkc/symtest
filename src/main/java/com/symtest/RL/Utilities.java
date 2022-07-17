@@ -55,11 +55,11 @@ public class Utilities{
             IPath state_path = new Path(mGraph);
             state_path.setPath(state_edges);
             
-            //System.out.println(ptr1);
+           // System.out.println("\nRL_Util ptr1:"+ptr1);
             State curr_state = new State(state_path);
-            //System.out.println(ptr2);
+           // System.out.println("\nRL_Util ptr2:"+ptr2);
             //System.out.println(curr_state.hashCode());
-            //System.out.println(curr_state.Getpath().getPath().toString());
+            //System.out.println("\nRL_Util curr_state:"+curr_state.Getpath().getPath().toString());
 
             if(my_table.CheckState(curr_state)==false)
             {
@@ -136,7 +136,7 @@ public class Utilities{
                     break;
             }
         }
-        System.out.println(back_track_point);
+        System.out.println("\nDEBUG BTP: "+back_track_point);
         return back_track_point;
     }
     public void update_policy(List <IEdge> computed_path, Qtable my_table, int back_track_point)
@@ -208,6 +208,7 @@ public class Utilities{
                     backEdge = added_path.getPath().get(i);
                 }
             }
+            /*
             if(backEdge != null)
                 System.out.println(backEdge.toString());
             else
@@ -216,6 +217,7 @@ public class Utilities{
 			System.out.println(prefix_path.toString());			
 			System.out.println(deleted_path.toString());			
 			System.out.println(added_path.toString());
+	     */
 
 
 			

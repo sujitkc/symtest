@@ -61,70 +61,56 @@ public class SymTest_RL_trained extends SymTest_basic {
 	
 	public TestSequence generateTestSequence() {
 		TestSequence testseq = null;
-		try {
-			
-
-                int train_iterations = 5;
-				SymTest_RL st = new SymTest_RL(mCFG, mTargets, heuristics, my_table);
-
-				Set <ICFEdge> filtered = new HashSet <>(mCFG.getEdgeSet());
-
-				for(ICFEdge edge: mCFG.getEdgeSet())
+		try {	
+	                int train_iterations = 5;
+ 			SymTest_RL st = new SymTest_RL(mCFG, mTargets, heuristics, my_table);
+			Set <ICFEdge> filtered = new HashSet <>(mCFG.getEdgeSet());
+			for(ICFEdge edge: mCFG.getEdgeSet())
+			{
+				if((edge.getTail().getId().equals("WHILE"))||(edge.getHead().getId().equals("WHILE")))
 				{
-					if((edge.getTail().getId().equals("WHILE"))||(edge.getHead().getId().equals("WHILE")))
-					{
-						filtered.remove(edge);
-					}
-					if((edge.getTail().getId().equals("BEGIN"))||(edge.getHead().getId().equals("BEGIN")))
-					{
-						filtered.remove(edge);
-					}
+					filtered.remove(edge);
 				}
-				
-				List <ICFEdge> list = new ArrayList <ICFEdge> (filtered);
-
-				//System.out.println(list);
-				while(train_iterations>0)
-                {
-
-					Collections.shuffle(list);
-//					System.out.println(list);
-					Set <ICFEdge> rTargets = new HashSet <ICFEdge> (list.subList(0, 2));
-					st.UpdateTargets(rTargets);
-
-					testseq = st.generateTestSequence();
-					
-                    System.out.println(testseq);
-                    for(State name: my_table.get_table().keySet())
-                    {
-                        System.out.println(name.Getpath().toString());
-                        System.out.println(my_table.GetValue(name));
-                        //String s = name.Getpath().toString() + ": "  + my_table.GetValue(name) + "\n";
-                        //myfile.append(s);
-                    }
-                    
-                    train_iterations--;
-                }
-
-				st.UpdateTargets(mTargets);
-				Instant start = Instant.now();
-				
-				//your code
-                testseq = st.generateTestSequence();
-				
-				Instant end = Instant.now();
-				
-				Duration timeElapsed = Duration.between(start, end);
-				
-				System.out.println("Time taken: "+ timeElapsed.getNano()/(1e6) +" milliseconds");
-
-			
-			System.out.println("Unsatisfiable finally");
+				if((edge.getTail().getId().equals("BEGIN"))||(edge.getHead().getId().equals("BEGIN")))
+				{
+					filtered.remove(edge);
+				}
+			}
+			List <ICFEdge> list = new ArrayList <ICFEdge> (filtered);
+			//System.out.println(list);
+			while(train_iterations>0)
+              		{
+              			System.out.println("\nDEBUG train iteration:"+train_iterations);
+				Collections.shuffle(list);
+//				System.out.println(list);
+				Set <ICFEdge> rTargets = new HashSet <ICFEdge> (list.subList(0, 2)); /*targets for training*/
+				st.UpdateTargets(rTargets);
+				System.out.println("\nDEBUG Training targets: "+rTargets);
+				testseq = st.generateTestSequence();
+		               //System.out.println(testseq);
+               		for(State name: my_table.get_table().keySet())
+                    		{
+                        		//System.out.println(name.Getpath().toString());
+                        		//System.out.println(my_table.GetValue(name));
+                        		
+                        		System.out.println(name.Getpath().toString() + ": "  + my_table.GetValue(name));
+                        		
+                        		//String s = name.Getpath().toString() + ": "  + my_table.GetValue(name) + "\n";
+                        		//myfile.append(s);
+                   		}
+               	       train_iterations--;
+              		}
+			st.UpdateTargets(mTargets);
+			Instant start = Instant.now();
+			testseq = st.generateTestSequence();
+			Instant end = Instant.now();
+			Duration timeElapsed = Duration.between(start, end);
+			System.out.println("Time taken: "+ timeElapsed.getNano()/(1e6) +" milliseconds");
+			//System.out.println("Unsatisfiable finally");
 		} 
-        catch (Exception e) {
+        	catch (Exception e) {
 			e.printStackTrace();
 		}
-
 		return testseq;
 	}
 

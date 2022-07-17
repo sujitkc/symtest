@@ -42,10 +42,10 @@ public class YicesSolver implements ISolver {
 		String command = SymTestConfiguration.YICES_PATH + " resources/input.ys";
 		
 		String output = YicesSolver.cmdExec(command);
-		System.out.println("yices output :\n" + output.toString());
+		//System.out.println("\n Solver output :\n" + output.toString());
 
 		SolverResult result = this.parseYicesOutput(output);
-		System.out.print("solver result = " + result.toString());
+		System.out.print("Solver result = " + result.toString());
 		return result;
 
 	}
@@ -118,9 +118,11 @@ public class YicesSolver implements ISolver {
 		}
 		Boolean isSat = false;
 		
-		  System.out.println("tokens = "); for(String t : tokens) {
-		  System.out.println(t + " "); }
-		  System.out.println("token 0 ==========================>"+tokens.get(0) + " ");
+		//  System.out.println("tokens = "); 
+		//  for(String t : tokens) {
+		//  System.out.println(t + " "); 
+		//  }
+		//  System.out.println("token 0 ==========================>"+tokens.get(0) + " ");
 		 
 		Map<IIdentifier, Object> map = new HashMap<IIdentifier, Object>();
 		if (tokens.get(0).equals("sat")) {

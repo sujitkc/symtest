@@ -87,8 +87,13 @@ public class Path implements IPath {
 	public String toString() {
 		String s = "<";
 		for(int i = 0; i < this.getSize(); i++) {
-			s = s + this.mPath.get(i).getId();
-			s = s + " ";
+			if(this.mPath.get(i) != null) {
+				s = s + this.mPath.get(i).getId();
+				s = s + " ";
+			}
+			else {
+				s = s + "null ";
+			}
 		}
 		s = s + ">";
 		return s;

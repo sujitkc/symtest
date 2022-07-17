@@ -32,7 +32,7 @@ public class Z3Solver implements ISolver {
 		String z3Input = Z3Solver.makeZ3Input(this.mVariables,
 				this.mExpression);
 
-		//System.out.println("z3 input :\n" + z3Input);
+		//System.out.println("\n DEBUG2 z3 input :\n" + z3Input);
 
 		FileWriter outFile;
 
@@ -45,7 +45,7 @@ public class Z3Solver implements ISolver {
 		//System.out.println("z3 output :\n" + output);
 
 		SolverResult result = this.parseZ3Output(output);
-		System.out.print("solver result = " + result.toString());
+		//System.out.print("\n DEBUG3 z3 solver result = " + result.toString());
 		return result;
 
 	}
@@ -118,17 +118,17 @@ public class Z3Solver implements ISolver {
 			tokens.add(tokeniser.nextToken());
 		}
 		Boolean isSat = false;
-	/*	int m = 0;
-		  System.out.print("tokens = "); for(String t : tokens) {
-		  System.out.print(m + t + " "); m++;}
-	*/ 
+		int m = 0;
+		  //System.out.print("tokens = "); for(String t : tokens) {
+		  //System.out.print(m + t + " "); m++;}
+	 
 		Map<IIdentifier, Object> map = new HashMap<IIdentifier, Object>();
 		if (tokens.get(0).equals("sat")) {
 			isSat = true;
-
+			//System.out.println("\n TOKEN SIZE:"+tokens.size());
 			for (int i = 3; i < tokens.size(); i = i + 5) {
 				String varName = tokens.get(i);
-				//System.out.println("Varname-->"+varName);
+				//System.out.println("\nVarname-->"+varName);
 				IIdentifier var = this.getVariableByName(varName);
 				if (var == null) {
 					Exception e = new Exception(
@@ -147,11 +147,12 @@ public class Z3Solver implements ISolver {
 					i = i + 1;
 				}
 				else{
+					//System.out.println("3->"+tokens.get(i + 3));
 					value = Z3Solver.parseVariableValue(var,
 						tokens.get(i + 3));
 				}
 				
-				System.out.println(var+"-->"+value);
+				//System.out.println("\nZ3 output: "+var+"-->"+value);
 				
 				map.put(var, value);
 			}
@@ -162,6 +163,7 @@ public class Z3Solver implements ISolver {
 	private static Object parseVariableValue(IIdentifier var, String value)
 			throws Exception {
 		if (var.getType().equals(Type.INT)) {
+			//System.out.println("\n Parse result: "+ var+ "--" + value);
 			return Integer.parseInt(value);
 		} else if (var.getType().equals(Type.BOOLEAN)) {
 			return Boolean.parseBoolean(value);
@@ -175,6 +177,7 @@ public class Z3Solver implements ISolver {
 	private IIdentifier getVariableByName(String name) {
 		for (IIdentifier v : this.mVariables) {
 			if (v.getName().equals(name)) {
+				//System.out.println("\n Identifie-var: "+ v.getName()+"-"+name);
 				return v;
 			}
 		}

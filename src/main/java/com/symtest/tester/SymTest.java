@@ -35,7 +35,7 @@ public abstract class SymTest {
 
 	abstract Stack<Pair<IEdge, Boolean>> backtrack(Stack<Pair<IEdge, Boolean>> stck);
 
-	protected static final int MAXIMUM_ITERATIONS = 100000000;
+	protected static final int MAXIMUM_ITERATIONS = 10;
 	public ICFG mCFG;
 	public CFGToGraphConvertor mConvertor;
 	public IGraph mGraph;

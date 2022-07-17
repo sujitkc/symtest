@@ -101,7 +101,7 @@ public class SymTest_basic extends SymTest {
 //								.getHead(), currentTargets);
 					//System.out.println("\nFINAL PATH : " + path);
 				}
-				System.out.println("Working!!!");
+//				System.out.println("Working!!!");
 				completePath.setPath(addprefix(prefix, path.getPath()));
 				ArrayList<ICFEdge> cfPath = convertPathEdgesToCFGEdges(completePath);
 
@@ -189,11 +189,12 @@ public class SymTest_basic extends SymTest {
 
 				currentTargets = new HashSet<IEdge>(targets);	
 				currentTargets.removeAll(prefix);
-				/*System.out.println("Ayush: " + Integer.toString(currentTargets.size()));
+				/*
+				System.out.println("Ayush: " + Integer.toString(currentTargets.size()));
 				System.out.println(prefix.toString());
 				System.out.println(currentTargets.toString());
-				*/
 				System.out.println(startEdge.toString());
+				*/
 				logger.finest("Stack: " + Arrays.toString(stack.toArray()));
 
 			}

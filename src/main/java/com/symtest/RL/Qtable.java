@@ -5,6 +5,8 @@ import com.symtest.graph.*;
 import com.symtest.mygraph.*;
 import java.util.*;
 public class Qtable{
+    public static final double R0 = 0.1;
+
     private HashMap <State, Double > table = new HashMap<State, Double>();
     public Qtable()
     {
@@ -24,7 +26,7 @@ public class Qtable{
         {
             return this.table.get(s);
         }   
-        return -1; 
+        return this.R0; 
     }
     public Boolean CheckState(State s)
     {
@@ -110,9 +112,9 @@ public class Qtable{
         State S2 = new State(testpath2);
         State S3 = new State(testpath3);
 
-        System.out.println(S1.Getpath().toString());
-        System.out.println(S2.Getpath().toString());
-        System.out.println(S3.Getpath().toString());
+        //System.out.println(S1.Getpath().toString());
+        //System.out.println(S2.Getpath().toString());
+        //System.out.println(S3.Getpath().toString());
 
 
         IEdge startedge = E0;
