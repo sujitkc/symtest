@@ -1,0 +1,10 @@
+void main() {
+        int start = -1;
+        int var;
+		var = input();
+		if (var > 0) {
+			start = 20;
+		} else {
+		  start = 40;
+		}
+}
