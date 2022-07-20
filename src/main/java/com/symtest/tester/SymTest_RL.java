@@ -281,8 +281,7 @@ public class SymTest_RL extends SymTest {
   // rewards   <- [ qtable[s] for s in ustates ]
   // btp       <- computeBTP(ustates, rewards)
   // btp'      <- tiebreak(btp, states) // final backtracking point after tiebreaking
-  // newstates <- prefix of states till btp'
-  // newstack  <- stackify(newstates)
+  // stack     <- unwindToBTP
   Stack<Pair<IEdge, Boolean>> backtrack(Stack <Pair<IEdge, Boolean>> stack) 
   {
     try
