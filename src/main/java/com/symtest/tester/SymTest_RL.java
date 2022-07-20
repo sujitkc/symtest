@@ -289,24 +289,14 @@ public class SymTest_RL extends SymTest {
       System.out.println("stack = " + stack);
       // retain only the decision edges
       // dstack    <- removeBasicBlockEdges(stack)
-      Stack <Pair<IEdge, Boolean>> dstack = new Stack <>();
-      for(Pair<IEdge, Boolean> el : stack) {
-         if(this.isDecisionEdge(el.getFirst())) {
-          dstack.push(el);
-        }
-      }
+      Stack <Pair<IEdge, Boolean>> dstack = removeBasicBlockEdges(stack);
       System.out.println("dstack = " + dstack);
 
+      List<IEdge> edgelist = stackToEdgeList(dstack);
+      System.out.println("edgelist = " + edgelist);
       // compute state list
       // states    <- computeStates(dstack)
-      List<IEdge> edgelist = new ArrayList<>();
-      while(!dstack.isEmpty()) {
-        edgelist.add(dstack.pop().getFirst());
-      }
-      Collections.reverse(edgelist);
-      System.out.println("edgelist = " + edgelist);
-      // ComputeStates<IEdge> C = new ComputeStates<>();
-      List<State> states = this.computeStates(edgelist);
+      List<State> states = SymTest_RL.computeStates(edgelist);
       System.out.println("states = " + states);
 
       // remove duplicates
@@ -338,8 +328,17 @@ public class SymTest_RL extends SymTest {
       // tiebreak
       State finalbtp = SymTest_RL.tiebreak(btp, states);
 
+
+      Stack <Pair<IEdge, Boolean>> oldstack = stack.clone(); // to preserve the
+      // stack till the end of the function so that we can use its original
+      // state for other things, e.g. updating rewards in QTable.
+ 
       this.unwindToBTP(finalbtp, stack);
       System.out.println("unwound stack = " + stack);
+      
+      // Update Qtable
+      this.updateQtable(stack, oldstack);
+
       System.exit(1);
       return stack;
     }
@@ -351,6 +350,30 @@ public class SymTest_RL extends SymTest {
       e.printStackTrace();
       return stack;
     }
+  }
+
+  // creates a new stack with the basic block edges removed.
+  // original stack is left unchanged.
+  private static Stack<Pair<IEdge, Boolean>> removeBasicBlockEdges(Stack<Pair<IEdge, Boolean>> stack) {
+    Stack <Pair<IEdge, Boolean>> dstack = new Stack <>();
+    for(Pair<IEdge, Boolean> el : stack) {
+       if(this.isDecisionEdge(el.getFirst())) {
+        dstack.push(el);
+      }
+    }
+    return dstack; 
+  }
+
+  // takes the symbolic execution stack and returns the lists in it.
+  // original stack is left unchanged.
+  private static List<IEdge> stackToEdgeList(Stack<Pair<IEdge, Boolean>> stack) {
+    Stack<Pair<IEdge, Boolean>> newstack = stack.clone();
+    List<IEdge> edgelist = new ArrayList<>();
+    while(!newStack.isEmpty()) {
+      edgelist.add(newstack.pop().getFirst());
+    }
+    Collections.reverse(edgelist);
+    return edgelist;
   }
 
   private boolean isDecisionEdge(IEdge edge) {
@@ -502,6 +525,35 @@ public class SymTest_RL extends SymTest {
       }
     }
     throw new Exception("Computed backtracking point " + btp + "doesn't exist in the stack " + stack + ".");
+  }
 
+  // get the list of edges which have been popped
+  // create state list from that
+  // count the target edges and back edges in the popped edge list.
+  // compute the delta reward
+  // update Qtable.
+  private void updateQtable(Stack<IEdge, Boolean>> stack, Stack<IEdge, Boolean>> oldstack) {
+
+    List<IEdge> edges    = SymTest_RL.stackToEdgeList(stack);
+    List<IEdge> oldEdges = SymTest_RL.stackToEdgeList(oldstack);
+    List<IEdge> poppedEdges = oldEdges.subList(edges.size(), oldEdges.size());
+
+    // remove the initial states which are noise due to null edges.
+    for(int i = 0; i < State.numOfEdges - 1; i++) {
+      poppedEdges.remove(0);
+    }
+    
+    // count number of targets
+    int numOfTargets = 0;
+
+    // count number of back edges
+    int numOfBackEdges = 0;
+
+    double delta = SymTest_RL.computeDelta(numOfTargets, numOfBackEdges);
+    List<State> poppedStates = SymTest_RL.computeStates(poppedEdges);
+    for(State s : poppedStates) {
+      this.qtable.UpdateState(s, delta);
+      delta = delta / 2; // older states get updated with exponentially decaying strength.
+    }
   }
 }
