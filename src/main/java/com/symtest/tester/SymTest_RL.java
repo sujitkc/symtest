@@ -42,6 +42,7 @@ public class SymTest_RL extends SymTest {
   private double probability_decay = 0.99998;
   private int edges_in_state = 3;
   private int n_backtracks = 0; 
+  private IPath completePath = new Path(mGraph);
   private Qtable qtable = new Qtable();
   public SymTest_RL(ICFG cfg, Set<ICFEdge> targets) {
     super(cfg, targets);
@@ -81,13 +82,16 @@ public class SymTest_RL extends SymTest {
       stack.push(new Pair<IEdge, Boolean>(startEdge, true));
       ArrayList<IEdge> prefix = new ArrayList<IEdge>();
 
-      IPath completePath = new Path(mGraph);
+    //  IPath completePath = new Path(mGraph);  //Change - made as global
       Set<IEdge> currentTargets = new HashSet<IEdge>(targets);
       while ((!stack.isEmpty()) && !(stack.peek().getFirst().equals(startEdge) && !stack.peek()
           .getSecond())) {
+       // System.out.println("\nDEBUG: Entered whileloop");
         // Obtain the path that traverses the targets.
         IPath path;
         if (!hasEncounteredMaximumIterations(completePath)) {
+         // System.out.println("\nDEBUG: Before findCFPath");
+         // System.out.println("\nDEBUG: target list length"+ currentTargets.size());
           FindCFPathAlgorithm algorithm = new FindCFPathAlgorithm(
               this.mGraph, currentTargets,
               this.mConvertor.getGraphNode(this.mTarget));
@@ -104,7 +108,11 @@ public class SymTest_RL extends SymTest {
         } else {
           // If maximum iterations are done, it is only an empty path
           // that gets added
-          path = new Path(mGraph);
+          System.out.println("\nCould not find satisfiable path");
+          System.exit(1);
+
+	  path = new Path(mGraph);
+
 //          FindCFPathAlgorithm algorithm = new FindCFPathAlgorithm(
 //              this.mGraph, terminalTarget,
 //              this.mConvertor.getGraphNode(this.mTarget));
@@ -120,7 +128,6 @@ public class SymTest_RL extends SymTest {
         // Solve the predicate
         SolverResult solution;
         
-//        logger.fine("Complete cfPath: " + cfPath);
 //        if (currentTargets.isEmpty()) {
           try {
 
@@ -148,20 +155,22 @@ public class SymTest_RL extends SymTest {
         }
         if (!hasEncounteredMaximumIterations(completePath)) {
           logger.fine("Finding Longest Viable Prefix");
-
+	  
           // Get Longest Viable Prefix(LVP)
           int satisfiableIndex = SymTestUtil
               .getLongestSatisfiablePrefix(cfPath, mCFG);
-          logger.finer("Satisfiable index: " + satisfiableIndex);
-          logger.finer("Complete path size: " + completePath.getSize());
-          logger.finer("path size: " + path.getSize());
+          System.out.println("Satisfiable index: " + satisfiableIndex);
+          System.out.println("Complete path size: " + completePath.getSize());
+          System.out.println("path size: " + path.getSize());
+	  
           List<IEdge> satisfiablePrefix = new ArrayList<IEdge>();
           //TODO Figure out what this does
-          satisfiablePrefix.addAll(completePath.getPath().subList(
-              (completePath.getPath().size() - 1)
-                  - path.getPath().size(),
-              satisfiableIndex + 2));
+          
 
+	 satisfiablePrefix.addAll(completePath.getPath().
+		subList((completePath.getPath().size() - 1)
+                 - path.getPath().size(), satisfiableIndex + 2));
+//	  System.exit(1);
           updatestack(stack, satisfiablePrefix);
           prefix.clear();
 
@@ -169,6 +178,7 @@ public class SymTest_RL extends SymTest {
               0,
               completePath.getPath().indexOf(
                   stack.peek().getFirst())));
+
         } else {
           prefix.clear();
           prefix.addAll(completePath.getPath().subList(
@@ -188,8 +198,11 @@ public class SymTest_RL extends SymTest {
           mystack.push(new Pair <IEdge, Boolean> (stack.peek().getFirst(), false));
 
 
-        //System.out.println(stack.toString());
+        System.out.println("stack: "+stack.toString());
+	System.out.println("mystack: "+mystack.toString());
+
         stack = backtrack(mystack);
+        //stack =  backtrack(stack);
         //System.out.println(stack.toString());
         if (!stack.isEmpty()) {
           // Add the updated edge
@@ -222,61 +235,8 @@ public class SymTest_RL extends SymTest {
     return testseq;
   }
 
-  /**
-   * This function pushes only the outgoing edge of decision node contained in the path into the stack. 
-   * @param stack
-   * @param path that hets added newly
-   */
-  /*
-  Stack<Pair<IEdge, Boolean>> backtrack(Stack <Pair<IEdge, Boolean>> stack) 
-  {
-    try
-    {
-      System.out.println("inside Backtrack");
-      
-          
-      //System.out.println(stack.toString());
-      List <Pair <IEdge, Boolean>> computed_path_util = new ArrayList<Pair <IEdge, Boolean>> (stack);
-      //Collections.reverse(computed_path_util);
-      List <IEdge> computed_path = new ArrayList <IEdge>();
-      for (Pair <IEdge, Boolean> it: computed_path_util)
-      {
-        computed_path.add(it.getFirst());
-      }
-        
-      System.out.println("input stack " + stack);
-      
-      Utilities my_util = new Utilities(edges_in_state, mGraph, mCFG, this);
-      my_util.initialize_table(computed_path, qtable);
-      int backtrackpoint = my_util.find_backtrack_point(computed_path, qtable, explore_probability);
-      
-      System.out.println("\n RL backtrack point:"+ backtrackpoint);
-      
-      my_util.update_policy(computed_path, qtable, backtrackpoint);
-      my_util.stack_update(computed_path, backtrackpoint, stack, backtrackpoint);
-      
-      System.out.println("output stack " + stack);
-      n_backtracks++;
-      System.out.println("backtrack number: " + n_backtracks);
-      explore_probability = explore_probability * probability_decay;
-      
-      if(explore_probability<0.2)
-        explore_probability = 0.2;
-      
-      return stack;
-    }
-    
-    catch(Exception e)
-    {
-      //System.out.println("Backtrack exception");  
-      stack.clear();
-      e.printStackTrace();
-      return stack;
-    }
-  }
-  */
-        // dstack    <- removeBasicBlockEdges(stack)
-        // states    <- computeStates(dstack)
+  // dstack    <- removeBasicBlockEdges(stack)
+  // states    <- computeStates(dstack)
   // ustates   <- removeDuplicateStates(states) // unique states
   // rewards   <- [ qtable[s] for s in ustates ]
   // btp       <- computeBTP(ustates, rewards)
@@ -286,14 +246,14 @@ public class SymTest_RL extends SymTest {
   {
     try
     {
-      System.out.println("stack = " + stack);
+      System.out.println("stack input to backtrack = " + stack);
       // retain only the decision edges
       // dstack    <- removeBasicBlockEdges(stack)
       Stack <Pair<IEdge, Boolean>> dstack = removeBasicBlockEdges(stack);
       System.out.println("dstack = " + dstack);
 
       List<IEdge> edgelist = stackToEdgeList(dstack);
-      System.out.println("edgelist = " + edgelist);
+      //System.out.println("edgelist = " + edgelist);
       // compute state list
       // states    <- computeStates(dstack)
       List<State> states = SymTest_RL.computeStates(edgelist);
@@ -308,38 +268,51 @@ public class SymTest_RL extends SymTest {
         }
       }
       System.out.println("ustates = " + ustates);
+      
+      for(State s : ustates) {
+        if(this.qtable.checkState(s)==false){
+          this.qtable.updateState(s, 0.1);
+        }        
+      }
 
       // compute rewards
       // rewards   <- [ qtable[s] for s in ustates ]
       List<Double> rewards = new ArrayList<>();
-      for(State s : ustates) {
+      for(State s : this.qtable.getKeys()) {
         rewards.add(this.qtable.GetValue(s));
       }
-      System.out.println(rewards);
+      System.out.println("Rewards : "+rewards);
 
       // integerify rewards
       List<Integer> irewards = SymTest_RL.integerify(rewards);
-      System.out.println(irewards);
+      System.out.println("Integerified Reward : "+irewards);
 
       // compute backtracking point
       State btp = SymTest_RL.computeBTP(ustates, irewards);
-      System.out.println(btp);
+      System.out.println("\nDEBUG BTP"+btp);
 
       // tiebreak
       State finalbtp = SymTest_RL.tiebreak(btp, states);
+      System.out.println("\nDEBUG FINAL BTP"+finalbtp);
 
-
-      Stack <Pair<IEdge, Boolean>> oldstack = stack.clone(); // to preserve the
+      Stack <Pair<IEdge, Boolean>> oldstack;
+      oldstack = (Stack<Pair<IEdge, Boolean>>) stack.clone(); // to preserve the
       // stack till the end of the function so that we can use its original
       // state for other things, e.g. updating rewards in QTable.
  
       this.unwindToBTP(finalbtp, stack);
       System.out.println("unwound stack = " + stack);
       
+      System.out.println("Table Before update");
+      this.qtable.displayTable();
+      
       // Update Qtable
-      this.updateQtable(stack, oldstack);
+      this.updateQtable(stack, oldstack, this.completePath.getPath());
+      
+      System.out.println("Table after update");
+      this.qtable.displayTable();
 
-      System.exit(1);
+     // System.exit(1);
       return stack;
     }
     
@@ -354,7 +327,7 @@ public class SymTest_RL extends SymTest {
 
   // creates a new stack with the basic block edges removed.
   // original stack is left unchanged.
-  private static Stack<Pair<IEdge, Boolean>> removeBasicBlockEdges(Stack<Pair<IEdge, Boolean>> stack) {
+  private Stack<Pair<IEdge, Boolean>> removeBasicBlockEdges(Stack<Pair<IEdge, Boolean>> stack) {
     Stack <Pair<IEdge, Boolean>> dstack = new Stack <>();
     for(Pair<IEdge, Boolean> el : stack) {
        if(this.isDecisionEdge(el.getFirst())) {
@@ -367,10 +340,12 @@ public class SymTest_RL extends SymTest {
   // takes the symbolic execution stack and returns the lists in it.
   // original stack is left unchanged.
   private static List<IEdge> stackToEdgeList(Stack<Pair<IEdge, Boolean>> stack) {
-    Stack<Pair<IEdge, Boolean>> newstack = stack.clone();
+   // Stack<Pair<IEdge, Boolean>> newStack = stack.clone();
+   // Object newStack = (Stack)stack.clone();
+    Stack<Pair<IEdge, Boolean>> newStack = (Stack)stack.clone();
     List<IEdge> edgelist = new ArrayList<>();
     while(!newStack.isEmpty()) {
-      edgelist.add(newstack.pop().getFirst());
+      edgelist.add(newStack.pop().getFirst());
     }
     Collections.reverse(edgelist);
     return edgelist;
@@ -378,7 +353,7 @@ public class SymTest_RL extends SymTest {
 
   private boolean isDecisionEdge(IEdge edge) {
     ICFEdge cfgEdge = this.mConvertor.getCFEdge(edge);
-    System.out.println(cfgEdge.getTail().getClass());
+   // System.out.println(cfgEdge.getTail().getClass());
       if(cfgEdge.getTail() instanceof ICFGDecisionNode) {
         return true;
       }
@@ -491,8 +466,9 @@ public class SymTest_RL extends SymTest {
     System.out.println("stack = " + stack);
     while(!stack.isEmpty()) {
       Stack<Pair<IEdge, Boolean>> tempStack = new Stack<>();
+     Pair<IEdge, Boolean> edge;
       for(int i = 0; i < State.numberOfEdges; i++) {
-        Pair<IEdge, Boolean> edge;
+        //Pair<IEdge, Boolean> edge;
 	if(btp.Getpath().getPath().get(State.numberOfEdges - i - 1) == null) {
           // the state has fewer than complete set of edges. Hence, the match has succeeded.
           while(!tempStack.isEmpty()) {
@@ -502,7 +478,8 @@ public class SymTest_RL extends SymTest {
 	}
 	try {
 	  do {
-            edge = stack.pop();
+	    edge = stack.pop();
+	   // System.out.println("\n edge popped"+ edge.getFirst());
 	  } while(!this.isDecisionEdge(edge.getFirst()));
 	}
 	catch(Exception e) {
@@ -510,7 +487,11 @@ public class SymTest_RL extends SymTest {
 	}
 
 	if(edge.getFirst().equals(btp.Getpath().getPath().get(State.numberOfEdges - i - 1))) {
-	  tempStack.push(edge);
+	
+	  System.out.println("\n Pushed value:"+btp.Getpath().getPath().get(State.numberOfEdges - i - 1));
+
+	  
+		tempStack.push(edge);
 	}
 	else {
 	  tempStack.clear();
@@ -518,7 +499,9 @@ public class SymTest_RL extends SymTest {
 	}
 	if(tempStack.size() == State.numberOfEdges) { // success
 	  while(!tempStack.isEmpty()) {
-	    stack.push(tempStack.pop());
+            Pair<IEdge, Boolean> pair = tempStack.pop();
+	    System.out.println("\nPopped value:"+pair);
+	    stack.push(pair);
 	  }
 	  return;
 	} // else failure; return to while
@@ -527,33 +510,89 @@ public class SymTest_RL extends SymTest {
     throw new Exception("Computed backtracking point " + btp + "doesn't exist in the stack " + stack + ".");
   }
 
+  private static double computeDelta(int tEdges,int bEdges){
+    return tEdges*3 - bEdges*2;
+  }
+
   // get the list of edges which have been popped
   // create state list from that
   // count the target edges and back edges in the popped edge list.
   // compute the delta reward
   // update Qtable.
-  private void updateQtable(Stack<IEdge, Boolean>> stack, Stack<IEdge, Boolean>> oldstack) {
+  private void updateQtable(Stack<Pair<IEdge, Boolean>> stack, Stack<Pair<IEdge, Boolean>> oldstack, List<IEdge> cfPath) {
 
     List<IEdge> edges    = SymTest_RL.stackToEdgeList(stack);
-    List<IEdge> oldEdges = SymTest_RL.stackToEdgeList(oldstack);
+   // List<IEdge> oldEdges = SymTest_RL.stackToEdgeList(oldstack);
+    List<IEdge> oldEdges = cfPath;
     List<IEdge> poppedEdges = oldEdges.subList(edges.size(), oldEdges.size());
-
+    //System.out.println("\nDEBUG: No. of edges:"+edges.size());
+    //System.out.println("\nDEBUG: No. of oldEdges:"+oldEdges.size());
+    //System.out.println("\nDEBUG: No. of poppedEdges:"+poppedEdges.size());
+    
+    System.out.println("complete path:"+cfPath);
+ 
+   // System.out.println("\nDEBUG: No. of edges:"+State.numberOfEdges);
     // remove the initial states which are noise due to null edges.
-    for(int i = 0; i < State.numOfEdges - 1; i++) {
+    for(int i = 0; i < State.numberOfEdges - 1; i++) {
+      //System.out.println("\nDEBUG:  removed Edge:"+poppedEdges.get(i));
       poppedEdges.remove(0);
     }
     
+   // for(ICFEdge e: this.mTargets){
+    //  System.out.println("Target Edge:"+e);
+    //}
+    
+    try{
     // count number of targets
     int numOfTargets = 0;
-
+    for(IEdge e: poppedEdges){
+     // System.out.println("Edge:"+e);
+      Set<IEdge> targets = convertTargetEdgesToGraphEdges(this.mTargets);
+      if(targets.contains(e)){
+         System.out.println("Popped Target:"+e);
+	 numOfTargets++;
+      }
+    }
+    
     // count number of back edges
     int numOfBackEdges = 0;
-
+    IEdge backEdge = mConvertor.getGraphEdge(mTarget.getOutgoingEdgeList().get(0));
+     for(IEdge e: poppedEdges){
+      if(e.equals(backEdge)){
+	 numOfBackEdges++;
+      }
+    }
+    
+   // System.out.println("Popped edges:"+poppedEdges);
+    List<IEdge>poppedDecisionEdges = SymTest_RL.removeBasicBlockEdges(poppedEdges);
+   // System.out.println("Popped Decision edges:"+poppedDecisionEdges);
+    
+    System.out.println("Targets cov:"+numOfTargets+"\tLoopEdge cov:"+numOfBackEdges);
+    
     double delta = SymTest_RL.computeDelta(numOfTargets, numOfBackEdges);
+    
+    System.out.println("Delta"+delta);
     List<State> poppedStates = SymTest_RL.computeStates(poppedEdges);
     for(State s : poppedStates) {
-      this.qtable.UpdateState(s, delta);
+      this.qtable.updateState(s, delta);
       delta = delta / 2; // older states get updated with exponentially decaying strength.
     }
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+  
+   // creates a new list with the basic block edges removed.
+  // original stack is left unchanged.
+  private static List<IEdge> removeBasicBlockEdges(List<IEdge> edgeList) {
+    List<IEdge> dList = new ArrayList();
+    for(IEdge el : edgeList) {
+      if(true) {
+       // System.out.println("Edge:"+el.getHead().getClass());
+        dList.add(el);
+      }
+    }
+    return dList; 
   }
 }
