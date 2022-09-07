@@ -16,10 +16,6 @@ public class Qtable{
     {
         this.table.put(s, v);
     }
-    public void UpdateState(State s, Double v)
-    {
-        this.table.put(s, v);
-    }
     public double GetValue(State s)
     {
         if(this.table.containsKey(s))
@@ -28,7 +24,34 @@ public class Qtable{
         }   
         return this.R0; 
     }
-    public Boolean CheckState(State s)
+    public void updateState(State s, Double v)
+    {
+        //System.out.println("value before:"+s+"\t"+v);
+        if(this.checkState(s) == false){
+        }
+        else{
+        v = this.GetValue(s) + v;
+        }
+       // System.out.println("value after:"+s+"\t"+v);
+        this.table.put(s, v);
+    }
+    public void displayTable()
+    {
+       System.out.println("-----Reward Table----");
+       for (State s: this.table.keySet()) {
+         State key = s;
+         Double value = this.GetValue(s);
+         
+         System.out.println(key + " " + value);
+        }
+        System.out.println("---------------------");
+    }
+    
+    public Set<State> getKeys(){
+       return this.table.keySet();
+    }
+    
+    public Boolean checkState(State s)
     {
         return this.table.containsKey(s);
     }

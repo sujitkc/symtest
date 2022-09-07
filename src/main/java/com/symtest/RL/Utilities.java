@@ -61,7 +61,7 @@ public class Utilities{
             //System.out.println(curr_state.hashCode());
             //System.out.println("\nRL_Util curr_state:"+curr_state.Getpath().getPath().toString());
 
-            if(my_table.CheckState(curr_state)==false)
+            if(my_table.checkState(curr_state)==false)
             {
                 my_table.AddState(curr_state, 0.0);
             }
@@ -252,7 +252,7 @@ public class Utilities{
 				
 				State curr_state = new State(state_path);
 				
-				my_table.UpdateState(curr_state, my_table.GetValue(curr_state) +  net_rew*curr_factor);
+				my_table.updateState(curr_state, my_table.GetValue(curr_state) +  net_rew*curr_factor);
                 //System.out.println(my_table.GetValue(curr_state));
                 //System.out.println(my_table.get_table().size());
 				ptr2--;
